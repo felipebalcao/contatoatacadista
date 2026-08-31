@@ -30,6 +30,7 @@ returns uuid
 language sql
 security definer
 stable
+set search_path = public, pg_temp
 as $$
   select role_id from profiles where id = auth.uid();
 $$;
@@ -39,6 +40,7 @@ returns boolean
 language sql
 security definer
 stable
+set search_path = public, pg_temp
 as $$
   select exists (
     select 1 from role_permissions

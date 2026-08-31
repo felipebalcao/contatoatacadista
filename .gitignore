@@ -20,6 +20,10 @@
 # production
 /build
 
+# project-specific
+.superpowers/
+.worktrees/
+
 # misc
 .DS_Store
 *.pem

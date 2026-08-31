@@ -714,7 +714,7 @@ export default async function LoginPage({
   const params = await searchParams
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-blue-950">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-[#1e3a5f]">
       <div className="bg-white rounded-lg shadow-2xl p-8 flex flex-col items-center gap-6">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-sky-600" />
         <LoginForm redirectTo={params.redirectTo ?? '/dashboard'} hasError={params.error === '1'} />
@@ -817,7 +817,7 @@ export function Sidebar({ permissions }: { permissions: ModuleKey[] }) {
   const items = NAV_ITEMS.filter((item) => permissions.includes(item.key))
 
   return (
-    <aside className="w-64 shrink-0 bg-gradient-to-b from-slate-900 to-blue-950 text-slate-300 flex flex-col p-4 gap-1">
+    <aside className="w-64 shrink-0 bg-gradient-to-b from-slate-900 to-[#1e3a5f] text-slate-300 flex flex-col p-4 gap-1">
       <div className="text-white font-bold text-lg mb-6">🚚 Distribuidora</div>
       {items.map((item) => {
         const active = pathname.startsWith(item.href)

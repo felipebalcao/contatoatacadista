@@ -74,7 +74,7 @@ export function PapeisPageClient({ roles }: { roles: (Role & { permissions: Modu
                     <span className="flex flex-col gap-1">
                       <span className="font-medium text-slate-900">{role.nome}</span>
                       {role.permissions_locked && (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
                           <Lock className="size-3" />
                           Permissões fixas
                         </span>
@@ -83,7 +83,7 @@ export function PapeisPageClient({ roles }: { roles: (Role & { permissions: Modu
                   </td>
                   <td className="px-4 py-3">
                     {role.permissions.length === 0 ? (
-                      <span className="text-slate-400">Nenhum módulo</span>
+                      <span className="text-slate-500">Nenhum módulo</span>
                     ) : (
                       <span className="flex flex-wrap gap-1.5">
                         {role.permissions.map((p) => (

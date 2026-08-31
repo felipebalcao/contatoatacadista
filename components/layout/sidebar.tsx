@@ -26,18 +26,20 @@ export function Sidebar({ permissions }: { permissions: ModuleKey[] }) {
   const items = NAV_ITEMS.filter((item) => permissions.includes(item.key))
 
   return (
-    <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col bg-gradient-to-b from-slate-900 to-[#1e3a5f] text-slate-300">
-      <div className="flex items-center gap-3 px-5 py-6">
+    <aside className="sticky top-0 flex h-screen w-16 shrink-0 flex-col bg-gradient-to-b from-slate-900 to-[#1e3a5f] text-slate-300 md:w-64">
+      <div className="flex items-center justify-center gap-3 px-3 py-5 md:justify-start md:px-5 md:py-6">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 shadow-lg shadow-sky-950/40">
           <Truck className="size-5 text-white" strokeWidth={2.25} />
         </span>
-        <span className="text-base font-semibold tracking-tight text-white">Distribuidora</span>
+        <span className="hidden text-base font-semibold tracking-tight text-white md:inline">
+          Distribuidora
+        </span>
       </div>
 
-      <div className="mx-5 h-px bg-white/10" />
+      <div className="mx-3 h-px bg-white/10 md:mx-5" />
 
       <nav className="flex flex-1 flex-col gap-1 px-3 py-5">
-        <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+        <p className="hidden px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 md:block">
           Navegação
         </p>
         {items.map((item) => {
@@ -62,13 +64,15 @@ export function Sidebar({ permissions }: { permissions: ModuleKey[] }) {
                   active ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'
                 }`}
               />
-              {item.label}
+              <span className="sr-only md:not-sr-only">{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
-      <p className="px-5 pb-5 text-[11px] text-slate-600">Gestão de cargas e distribuição</p>
+      <p className="hidden px-5 pb-5 text-[11px] text-slate-400 md:block">
+        Gestão de cargas e distribuição
+      </p>
     </aside>
   )
 }

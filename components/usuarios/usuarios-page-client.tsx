@@ -1,9 +1,11 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Info } from 'lucide-react'
+import { Info, ShieldCheck } from 'lucide-react'
 import { UsersTable } from './users-table'
 import { UserFormDialog } from './user-form-dialog'
+import { buttonVariants } from '@/components/ui/button'
 import type { Profile, Role } from '@/lib/types/database'
 
 export function UsuariosPageClient({
@@ -27,13 +29,22 @@ export function UsuariosPageClient({
             Quem tem acesso ao sistema e com qual papel.
           </p>
         </div>
-        <UserFormDialog roles={roles} onCreated={() => router.refresh()} />
+        <div className="flex flex-wrap items-start justify-end gap-2">
+          <Link
+            href="/usuarios/papeis"
+            className={buttonVariants({ variant: 'outline', size: 'lg' })}
+          >
+            <ShieldCheck className="size-4" />
+            Gerenciar papéis
+          </Link>
+          <UserFormDialog roles={roles} onCreated={() => router.refresh()} />
+        </div>
       </div>
 
       <div className="h-px bg-gradient-to-r from-sky-500/40 to-transparent" />
 
       <div className="flex flex-col gap-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 tabular-nums">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 tabular-nums">
           {users.length} {users.length === 1 ? 'usuário' : 'usuários'}
         </p>
         <UsersTable users={users} />

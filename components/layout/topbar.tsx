@@ -7,7 +7,7 @@ export function Topbar({ nome }: { nome: string }) {
     <header className="sticky top-0 z-10 flex h-14 items-center justify-end gap-4 border-b border-slate-200 bg-white/80 px-6 backdrop-blur-sm">
       <div className="flex flex-col items-end leading-tight">
         <span className="text-sm font-medium text-slate-700">{nome}</span>
-        <span className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Sessão ativa</span>
+        <span className="text-[11px] uppercase tracking-[0.12em] text-slate-500">Sessão ativa</span>
       </div>
       <div className="h-6 w-px bg-slate-200" />
       <form action={signOut}>

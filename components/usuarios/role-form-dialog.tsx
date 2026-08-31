@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { AlertCircle, Lock, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -64,45 +65,107 @@ export function RoleFormDialog({
 
   if (!open) {
     return (
-      <Button onClick={() => setOpen(true)} variant={isEditing ? 'outline' : 'default'} size={isEditing ? 'sm' : 'default'}>
+      <Button
+        onClick={() => setOpen(true)}
+        variant={isEditing ? 'outline' : 'default'}
+        size={isEditing ? 'sm' : 'default'}
+        className={isEditing ? undefined : 'h-9 px-3'}
+      >
+        {!isEditing && <Plus className="size-4" />}
         {isEditing ? 'Editar' : 'Novo papel'}
       </Button>
     )
   }
 
   return (
-    <form action={handleSubmit} className="border rounded-lg p-4 flex flex-col gap-3 max-w-sm">
-      {error && <p className="text-sm text-red-600">{error}</p>}
+    <form
+      action={handleSubmit}
+      className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 text-left shadow-lg shadow-slate-900/5"
+    >
+      <div className="flex flex-col gap-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-600">
+          {isEditing ? 'Editando' : 'Novo'}
+        </p>
+        <h2 className="text-base font-semibold tracking-tight text-slate-900">
+          {isEditing ? role?.nome : 'Criar papel'}
+        </h2>
+      </div>
+
+      {error && (
+        <p
+          role="alert"
+          className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          {error}
+        </p>
+      )}
+
       {!isEditing && (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="nome">Nome do papel</Label>
-          <Input id="nome" name="nome" required />
+          <Label htmlFor="nome" className="text-sm font-medium text-slate-700">
+            Nome do papel
+          </Label>
+          <Input id="nome" name="nome" required className="h-9" />
         </div>
       )}
-      <div className="flex flex-col gap-1.5">
-        <Label>Módulos</Label>
-        {MODULE_KEYS.map((key) => (
-          <label key={key} className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name={`module-${key}`}
-              defaultChecked={role?.permissions.includes(key)}
-              disabled={role?.permissions_locked}
-            />
-            {MODULE_LABELS[key]}
-          </label>
-        ))}
+
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-medium text-slate-700">Módulos</Label>
+
+        {role?.permissions_locked && (
+          <p className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            <Lock className="mt-0.5 size-3.5 shrink-0" />
+            Este papel tem acesso total e não pode ser alterado.
+          </p>
+        )}
+
+        <div className="flex flex-col gap-0.5">
+          {MODULE_KEYS.map((key) => (
+            <label
+              key={key}
+              className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm text-slate-700 transition-colors duration-150 hover:bg-slate-50 has-disabled:cursor-not-allowed has-disabled:text-slate-400 has-disabled:hover:bg-transparent"
+            >
+              <input
+                type="checkbox"
+                name={`module-${key}`}
+                defaultChecked={role?.permissions.includes(key)}
+                disabled={role?.permissions_locked}
+                className="size-4 shrink-0 accent-sky-500 outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+              />
+              {MODULE_LABELS[key]}
+            </label>
+          ))}
+        </div>
       </div>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={isPending || role?.permissions_locked}>
+
+      <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+        <Button
+          type="submit"
+          disabled={isPending || role?.permissions_locked}
+          className="h-9 px-3"
+        >
           {isPending ? 'Salvando...' : 'Salvar'}
         </Button>
         {isEditing && !role?.is_system && (
-          <Button type="button" variant="destructive" onClick={handleDelete} disabled={isPending}>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isPending}
+            className="h-9 px-3"
+          >
             Excluir
           </Button>
         )}
-        <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setOpen(false)}
+          className="h-9 px-3 text-slate-500 hover:text-slate-900"
+        >
+          Cancelar
+        </Button>
       </div>
     </form>
   )

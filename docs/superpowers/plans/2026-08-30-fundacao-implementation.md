@@ -726,8 +726,14 @@ export default async function LoginPage({
 
 - [ ] **Step 8: Criar um usuário de teste no Supabase local**
 
+O Supabase CLI não tem um subcomando `auth signup`; crie o usuário chamando o endpoint de signup do GoTrue diretamente (usando a `NEXT_PUBLIC_SUPABASE_ANON_KEY` de `.env.local`, criada no Task 2):
+
 ```bash
-npx supabase auth signup --email admin@teste.com --password senha123456
+source .env.local
+curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/auth/v1/signup" \
+  -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@teste.com","password":"senha123456"}'
 ```
 
 Depois, com a `DB_URL` do Task 2 (`npx supabase status`), vincule o profile ao papel Admin:
@@ -950,7 +956,7 @@ git commit -m "feat: add authenticated shell, permission-filtered navigation and
 **Nota:** `components/usuarios/role-form-dialog.tsx` (criar/editar/excluir papel com checkboxes de módulo) é implementado no Task 7, que também substitui a página de papéis criada aqui por uma versão interativa — reaproveitando `listRoles`/`createRole`/`updateRolePermissions`/`deleteRole` definidos neste task.
 
 **Interfaces:**
-- Consumes: `requireModuleAccess` (Task 5), `createClient()` server (Task 3), `MODULE_KEYS` (Task 3).
+- Consumes: `requireModuleAccess` (Task 5), `createAdminClient()` (Task 3), `MODULE_KEYS` (Task 3).
 - Produces: `listRoles()`, `createRole(nome: string, moduleKeys: ModuleKey[])`, `updateRolePermissions(roleId: string, moduleKeys: ModuleKey[])`, `deleteRole(roleId: string)` em `actions/role-actions.ts` — usados pela tela de Usuários (Task 7) e por `role-form-dialog.tsx`.
 
 - [ ] **Step 1: Escrever o teste de integração das Server Actions de papéis (falhando)**

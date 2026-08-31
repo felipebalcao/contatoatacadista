@@ -1541,7 +1541,7 @@ import { requireModuleAccess } from '@/lib/auth/require-module-access'
 import { listUsers } from '@/actions/user-actions'
 import { listRoles } from '@/actions/role-actions'
 import { UsuariosPageClient } from '@/components/usuarios/usuarios-page-client'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 
 export default async function UsuariosPage() {
   await requireModuleAccess('usuarios')
@@ -1550,7 +1550,9 @@ export default async function UsuariosPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button render={<Link href="/usuarios/papeis">Gerenciar papéis</Link>} variant="outline" size="sm" />
+        <Link href="/usuarios/papeis" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+          Gerenciar papéis
+        </Link>
       </div>
       <UsuariosPageClient users={users} roles={roles} />
     </div>

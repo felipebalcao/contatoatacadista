@@ -922,9 +922,7 @@ export default function AcessoNegadoPage() {
     <main className="min-h-screen flex flex-col items-center justify-center gap-4">
       <h1 className="text-xl font-semibold">Acesso negado</h1>
       <p className="text-slate-500">Você não tem permissão para acessar essa área.</p>
-      <Button asChild>
-        <Link href="/dashboard">Voltar ao Dashboard</Link>
-      </Button>
+      <Button render={<Link href="/dashboard">Voltar ao Dashboard</Link>} />
     </main>
   )
 }
@@ -1552,9 +1550,7 @@ export default async function UsuariosPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/usuarios/papeis">Gerenciar papéis</Link>
-        </Button>
+        <Button render={<Link href="/usuarios/papeis">Gerenciar papéis</Link>} variant="outline" size="sm" />
       </div>
       <UsuariosPageClient users={users} roles={roles} />
     </div>

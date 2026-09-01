@@ -380,11 +380,22 @@ describe('cliente-actions', () => {
     expect(atualizado.nome).toBe('Nome Atualizado')
   })
 
-  it('lista clientes filtrando por nome', async () => {
+  it('lista clientes filtrando por nome, excluindo os que não combinam', async () => {
     await createCliente({ ...inputBase, nome: 'Cliente Buscável' })
+    await createCliente({
+      ...inputBase,
+      tipo: 'pj',
+      documento: '11.222.333/0001-81',
+      nome: 'Outra Empresa Qualquer',
+    })
 
     const resultados = await listClientes('Buscável')
+
     expect(resultados.some((c) => c.documento === DOCUMENTO_TESTE)).toBe(true)
+    expect(resultados.some((c) => c.documento === '11222333000181')).toBe(false)
+
+    const supabase = createAdminClient()
+    await supabase.from('clientes').delete().eq('documento', '11222333000181')
   })
 
   it('inativa e reativa um cliente', async () => {
@@ -418,13 +429,22 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizarDocumento, validarDocumento } from '@/lib/validation/documento'
 import type { Cliente, ClienteInput } from '@/lib/types/database'
 
+function escapePostgrestFilterValue(value: string): string {
+  return value.replace(/[,()]/g, '\\$&')
+}
+
 export async function listClientes(query?: string): Promise<Cliente[]> {
   const supabase = createAdminClient()
   let request = supabase.from('clientes').select('*').order('nome')
 
   if (query) {
+    const nomeBusca = escapePostgrestFilterValue(query)
     const documentoBusca = normalizarDocumento(query)
-    request = request.or(`nome.ilike.%${query}%,documento.ilike.%${documentoBusca}%`)
+    const filtros = [`nome.ilike.%${nomeBusca}%`]
+    if (documentoBusca) {
+      filtros.push(`documento.ilike.%${documentoBusca}%`)
+    }
+    request = request.or(filtros.join(','))
   }
 
   const { data, error } = await request

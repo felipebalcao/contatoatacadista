@@ -61,11 +61,22 @@ describe('cliente-actions', () => {
     expect(atualizado.nome).toBe('Nome Atualizado')
   })
 
-  it('lista clientes filtrando por nome', async () => {
+  it('lista clientes filtrando por nome, excluindo os que não combinam', async () => {
     await createCliente({ ...inputBase, nome: 'Cliente Buscável' })
+    await createCliente({
+      ...inputBase,
+      tipo: 'pj',
+      documento: '11.222.333/0001-81',
+      nome: 'Outra Empresa Qualquer',
+    })
 
     const resultados = await listClientes('Buscável')
+
     expect(resultados.some((c) => c.documento === DOCUMENTO_TESTE)).toBe(true)
+    expect(resultados.some((c) => c.documento === '11222333000181')).toBe(false)
+
+    const supabase = createAdminClient()
+    await supabase.from('clientes').delete().eq('documento', '11222333000181')
   })
 
   it('inativa e reativa um cliente', async () => {

@@ -4,13 +4,22 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizarDocumento, validarDocumento } from '@/lib/validation/documento'
 import type { Cliente, ClienteInput } from '@/lib/types/database'
 
+function escapePostgrestFilterValue(value: string): string {
+  return value.replace(/[,()]/g, '\\$&')
+}
+
 export async function listClientes(query?: string): Promise<Cliente[]> {
   const supabase = createAdminClient()
   let request = supabase.from('clientes').select('*').order('nome')
 
   if (query) {
+    const nomeBusca = escapePostgrestFilterValue(query)
     const documentoBusca = normalizarDocumento(query)
-    request = request.or(`nome.ilike.%${query}%,documento.ilike.%${documentoBusca}%`)
+    const filtros = [`nome.ilike.%${nomeBusca}%`]
+    if (documentoBusca) {
+      filtros.push(`documento.ilike.%${documentoBusca}%`)
+    }
+    request = request.or(filtros.join(','))
   }
 
   const { data, error } = await request

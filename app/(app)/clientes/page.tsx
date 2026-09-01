@@ -1,11 +1,10 @@
 import { requireModuleAccess } from '@/lib/auth/require-module-access'
+import { listClientes } from '@/actions/cliente-actions'
+import { ClientesPageClient } from '@/components/clientes/clientes-page-client'
 
 export default async function ClientesPage() {
   await requireModuleAccess('clientes')
+  const clientes = await listClientes()
 
-  return (
-    <div className="border border-dashed rounded-lg p-12 text-center text-slate-400">
-      Clientes — em construção
-    </div>
-  )
+  return <ClientesPageClient clientesIniciais={clientes} />
 }

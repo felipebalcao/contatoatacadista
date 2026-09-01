@@ -718,6 +718,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createCliente, updateCliente } from '@/actions/cliente-actions'
+import { validarDocumento } from '@/lib/validation/documento'
 import type { Cliente, ClienteInput, TipoCliente } from '@/lib/types/database'
 
 export function ClienteForm({ cliente }: { cliente?: Cliente }) {
@@ -730,9 +731,16 @@ export function ClienteForm({ cliente }: { cliente?: Cliente }) {
   function handleSubmit(formData: FormData) {
     setError(null)
 
+    const documento = formData.get('documento') as string
+
+    if (!validarDocumento(tipo, documento)) {
+      setError('Documento inválido.')
+      return
+    }
+
     const input: ClienteInput = {
       tipo,
-      documento: formData.get('documento') as string,
+      documento,
       nome: formData.get('nome') as string,
       nome_fantasia: tipo === 'pj' ? (formData.get('nome_fantasia') as string) || null : null,
       telefone: (formData.get('telefone') as string) || null,

@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   createCliente,
@@ -6,7 +6,18 @@ import {
   listClientes,
   toggleClienteAtivo,
 } from '@/actions/cliente-actions'
+import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import type { ClienteInput } from '@/lib/types/database'
+
+vi.mock('@/lib/auth/get-current-profile', () => ({
+  getCurrentProfile: vi.fn(),
+}))
+
+const ADMIN_PROFILE = {
+  profile: { id: 'test-admin', nome: 'Admin Teste', email: 'admin@teste.com', role_id: 'admin-role', ativo: true, created_at: '' },
+  role: { id: 'admin-role', nome: 'Admin', is_system: true, permissions_locked: true, created_at: '' },
+  permissions: ['dashboard', 'cargas', 'clientes', 'produtos', 'usuarios'] as const,
+}
 
 const DOCUMENTO_TESTE = '11144477735'
 
@@ -27,6 +38,10 @@ const inputBase: ClienteInput = {
 }
 
 describe('cliente-actions', () => {
+  beforeEach(() => {
+    vi.mocked(getCurrentProfile).mockResolvedValue(ADMIN_PROFILE as never)
+  })
+
   afterEach(async () => {
     const supabase = createAdminClient()
     await supabase.from('clientes').delete().eq('documento', DOCUMENTO_TESTE)
@@ -89,5 +104,22 @@ describe('cliente-actions', () => {
     await toggleClienteAtivo(cliente.id, true)
     lista = await listClientes()
     expect(lista.find((c) => c.id === cliente.id)?.ativo).toBe(true)
+  })
+
+  it('rejeita chamadas de um usuário sem permissão de clientes', async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue({
+      ...ADMIN_PROFILE,
+      permissions: ['dashboard'],
+    } as never)
+
+    await expect(listClientes()).rejects.toThrow('Acesso negado.')
+  })
+
+  it('busca por nome contendo vírgula não quebra o filtro', async () => {
+    await createCliente({ ...inputBase, nome: 'Cliente, Com Vírgula' })
+
+    const resultados = await listClientes('Cliente, Com Vírgula')
+
+    expect(resultados.some((c) => c.documento === DOCUMENTO_TESTE)).toBe(true)
   })
 })

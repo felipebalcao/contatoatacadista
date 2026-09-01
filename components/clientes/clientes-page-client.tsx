@@ -11,22 +11,33 @@ import type { Cliente } from '@/lib/types/database'
 export function ClientesPageClient({ clientesIniciais }: { clientesIniciais: Cliente[] }) {
   const [clientes, setClientes] = useState(clientesIniciais)
   const [busca, setBusca] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function handleBuscar(formData: FormData) {
     const query = (formData.get('busca') as string) ?? ''
     setBusca(query)
+    setError(null)
     startTransition(async () => {
-      const resultado = await listClientes(query || undefined)
-      setClientes(resultado)
+      try {
+        const resultado = await listClientes(query || undefined)
+        setClientes(resultado)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao buscar clientes.')
+      }
     })
   }
 
   function handleToggleAtivo(id: string, ativo: boolean) {
+    setError(null)
     startTransition(async () => {
-      await toggleClienteAtivo(id, ativo)
-      const resultado = await listClientes(busca || undefined)
-      setClientes(resultado)
+      try {
+        await toggleClienteAtivo(id, ativo)
+        const resultado = await listClientes(busca || undefined)
+        setClientes(resultado)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao atualizar cliente.')
+      }
     })
   }
 
@@ -38,6 +49,7 @@ export function ClientesPageClient({ clientesIniciais }: { clientesIniciais: Cli
           Novo cliente
         </Link>
       </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
       <form action={handleBuscar} className="flex gap-2 max-w-sm">
         <Input name="busca" placeholder="Buscar por nome ou documento" defaultValue={busca} />
         <Button type="submit" variant="outline" disabled={isPending}>

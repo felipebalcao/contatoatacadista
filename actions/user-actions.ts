@@ -1,9 +1,11 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertModuleAccess } from '@/lib/auth/assert-module-access'
 import type { Profile, Role } from '@/lib/types/database'
 
 export async function listUsers(): Promise<(Profile & { role: Role })[]> {
+  await assertModuleAccess('usuarios')
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('profiles')
@@ -15,6 +17,7 @@ export async function listUsers(): Promise<(Profile & { role: Role })[]> {
 }
 
 export async function createUser(nome: string, email: string, roleId: string): Promise<Profile> {
+  await assertModuleAccess('usuarios')
   const supabase = createAdminClient()
 
   const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(email)

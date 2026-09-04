@@ -30,9 +30,11 @@ export async function createRole(nome: string, moduleKeys: ModuleKey[]): Promise
   if (error) throw new Error(error.message)
 
   if (moduleKeys.length > 0) {
-    await supabase
+    const { error: permissionsError } = await supabase
       .from('role_permissions')
       .insert(moduleKeys.map((module_key) => ({ role_id: role.id, module_key })))
+
+    if (permissionsError) throw new Error(permissionsError.message)
   }
 
   return role
@@ -50,9 +52,11 @@ export async function updateRolePermissions(roleId: string, moduleKeys: ModuleKe
   await supabase.from('role_permissions').delete().eq('role_id', roleId)
 
   if (moduleKeys.length > 0) {
-    await supabase
+    const { error: permissionsError } = await supabase
       .from('role_permissions')
       .insert(moduleKeys.map((module_key) => ({ role_id: roleId, module_key })))
+
+    if (permissionsError) throw new Error(permissionsError.message)
   }
 }
 

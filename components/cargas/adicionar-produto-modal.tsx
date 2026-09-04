@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,6 +38,15 @@ export function AdicionarProdutoModal({
   const [valorUnitario, setValorUnitario] = useState('')
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!open) {
+      setProdutoId('')
+      setQuantidade('')
+      setValorUnitario('')
+      setError(null)
+    }
+  }, [open])
+
   function handleAdicionar() {
     setError(null)
     const produto = produtosDisponiveis.find((p) => p.id === produtoId)
@@ -48,12 +57,12 @@ export function AdicionarProdutoModal({
       setError('Selecione um produto.')
       return
     }
-    if (!(quantidadeNum > 0)) {
-      setError('Quantidade precisa ser maior que zero.')
+    if (quantidade.trim() === '' || !(quantidadeNum > 0)) {
+      setError('Informe uma quantidade válida, maior que zero.')
       return
     }
-    if (!(valorNum >= 0)) {
-      setError('Valor unitário inválido.')
+    if (valorUnitario.trim() === '' || !Number.isFinite(valorNum) || valorNum < 0) {
+      setError('Informe um valor unitário válido.')
       return
     }
 

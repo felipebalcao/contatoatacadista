@@ -85,6 +85,8 @@ Diferente de Clientes/Fornecedores/Produtos: `itens_carga` **tem** policy de `de
 
 Como em todos os módulos anteriores, as Server Actions usam `createAdminClient()` (service role), que ignora RLS — a autorização real acontece em `assertModuleAccess('cargas')` no início de cada Server Action, e essas policies são defesa em profundidade, não o mecanismo de aplicação.
 
+**Divergência conhecida entre RLS e autorização da aplicação:** `listFornecedoresAtivos`/`listProdutosAtivos` (usadas para popular os seletores de fornecedor e produto neste módulo) são gated apenas por `assertModuleAccess('cargas')` — deliberado, já que um usuário só com acesso a `cargas` precisa ler nomes de fornecedor/produto para montar uma carga. As policies de RLS em `fornecedores`/`produtos`, porém, exigem `has_module_access('fornecedores')`/`has_module_access('produtos')` respectivamente, sem exceção para `cargas`. Isso é inofensivo hoje porque toda Server Action usa `createAdminClient()` (service role), que ignora RLS — mas se a aplicação algum dia deixar de usar o client de service role nessas leituras, um usuário só-cargas seria bloqueado pelo RLS apesar de a aplicação permitir isso intencionalmente. Registrado aqui como decisão consciente, não como bug pendente.
+
 ## Consistência dos dados: funções no banco
 
 Criar ou editar uma carga envolve duas tabelas (`cargas` e `itens_carga`) que precisam ser gravadas juntas, atomicamente — se a inserção dos itens falhar, a carga não deve ficar órfã sem nenhum item. Isso é resolvido com duas funções PL/pgSQL, cada uma um único statement de função (portanto uma única transação implícita do Postgres):

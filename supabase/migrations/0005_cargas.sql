@@ -45,6 +45,7 @@ create or replace function criar_carga_com_itens(
   p_itens jsonb
 ) returns uuid
 language plpgsql
+set search_path = public, pg_temp
 as $$
 declare
   v_carga_id uuid;
@@ -72,6 +73,7 @@ create or replace function atualizar_carga_com_itens(
   p_itens jsonb
 ) returns void
 language plpgsql
+set search_path = public, pg_temp
 as $$
 begin
   update cargas

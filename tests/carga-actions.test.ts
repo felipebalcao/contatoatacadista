@@ -107,7 +107,7 @@ describe('carga-actions', () => {
       ],
     }
 
-    await expect(createCarga(input)).rejects.toThrow()
+    await expect(createCarga(input)).rejects.toThrow('Não é possível adicionar o mesmo produto duas vezes na carga.')
 
     const cargas = await listCargas('Carga Com Item Inválido')
     expect(cargas).toHaveLength(0)

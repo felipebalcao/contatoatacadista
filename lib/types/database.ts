@@ -1,4 +1,4 @@
-export type ModuleKey = 'dashboard' | 'cargas' | 'clientes' | 'produtos' | 'usuarios'
+export type ModuleKey = 'dashboard' | 'cargas' | 'clientes' | 'produtos' | 'fornecedores' | 'usuarios'
 
 export interface Role {
   id: string

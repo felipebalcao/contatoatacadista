@@ -11,6 +11,7 @@ const MODULE_LABELS: Record<ModuleKey, string> = {
   cargas: 'Cargas',
   clientes: 'Clientes',
   produtos: 'Produtos',
+  fornecedores: 'Fornecedores',
   usuarios: 'Usuários',
 }
 

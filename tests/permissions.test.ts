@@ -16,7 +16,7 @@ describe('hasModuleAccess', () => {
 })
 
 describe('MODULE_KEYS', () => {
-  it('contém exatamente os cinco módulos desta fase, na ordem de navegação', () => {
-    expect(MODULE_KEYS).toEqual(['dashboard', 'cargas', 'clientes', 'produtos', 'usuarios'])
+  it('contém exatamente os seis módulos desta fase, na ordem de navegação', () => {
+    expect(MODULE_KEYS).toEqual(['dashboard', 'cargas', 'clientes', 'produtos', 'fornecedores', 'usuarios'])
   })
 })

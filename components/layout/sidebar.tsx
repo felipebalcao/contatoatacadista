@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  Building2,
   LayoutDashboard,
   Package,
   Settings,
@@ -18,6 +19,7 @@ const NAV_ITEMS: { key: ModuleKey; label: string; href: string; icon: LucideIcon
   { key: 'cargas', label: 'Cargas', href: '/cargas', icon: Package },
   { key: 'clientes', label: 'Clientes', href: '/clientes', icon: Users },
   { key: 'produtos', label: 'Produtos', href: '/produtos', icon: Tag },
+  { key: 'fornecedores', label: 'Fornecedores', href: '/fornecedores', icon: Building2 },
   { key: 'usuarios', label: 'Usuários / Config', href: '/usuarios', icon: Settings },
 ]
 

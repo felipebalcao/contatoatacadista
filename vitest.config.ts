@@ -8,7 +8,7 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ['./tests/setup.ts'],
     fileParallelism: false,
-    exclude: ['**/node_modules/**', '**/.worktrees/**', '**/.next/**'],
+    exclude: ['**/node_modules/**', '**/.worktrees/**', '**/worktrees/**', '**/.next/**'],
   },
   resolve: {
     alias: { '@': path.resolve(__dirname, '.') },

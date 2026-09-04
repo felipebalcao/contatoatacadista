@@ -58,3 +58,38 @@ export interface ClienteInput {
   endereco_cep: string | null
   observacoes: string | null
 }
+
+export interface Fornecedor {
+  id: string
+  tipo: TipoCliente
+  documento: string
+  nome: string
+  nome_fantasia: string | null
+  telefone: string | null
+  email: string | null
+  endereco_rua: string | null
+  endereco_numero: string | null
+  endereco_bairro: string | null
+  endereco_cidade: string | null
+  endereco_uf: string | null
+  endereco_cep: string | null
+  observacoes: string | null
+  ativo: boolean
+  created_at: string
+}
+
+export interface FornecedorInput {
+  tipo: TipoCliente
+  documento: string
+  nome: string
+  nome_fantasia: string | null
+  telefone: string | null
+  email: string | null
+  endereco_rua: string | null
+  endereco_numero: string | null
+  endereco_bairro: string | null
+  endereco_cidade: string | null
+  endereco_uf: string | null
+  endereco_cep: string | null
+  observacoes: string | null
+}

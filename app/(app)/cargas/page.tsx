@@ -1,11 +1,10 @@
 import { requireModuleAccess } from '@/lib/auth/require-module-access'
+import { listCargas } from '@/actions/carga-actions'
+import { CargasPageClient } from '@/components/cargas/cargas-page-client'
 
 export default async function CargasPage() {
   await requireModuleAccess('cargas')
+  const cargas = await listCargas()
 
-  return (
-    <div className="border border-dashed rounded-lg p-12 text-center text-slate-400">
-      Cargas — em construção
-    </div>
-  )
+  return <CargasPageClient cargasIniciais={cargas} />
 }

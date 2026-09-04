@@ -112,3 +112,39 @@ export interface ProdutoInput {
   unidade: string
   categoria: string | null
 }
+
+export interface CargaResumo {
+  id: string
+  nome: string
+  data: string
+  ativo: boolean
+  fornecedor_nome: string
+  total: number
+}
+
+export interface ItemCarga {
+  id: string
+  produto_id: string
+  produto_codigo: string
+  produto_nome: string
+  produto_unidade: string
+  quantidade: number
+  valor_unitario: number
+}
+
+export interface CargaComItens {
+  id: string
+  fornecedor_id: string
+  fornecedor_nome: string
+  nome: string
+  data: string
+  ativo: boolean
+  itens: ItemCarga[]
+}
+
+export interface CargaInput {
+  fornecedor_id: string
+  nome: string
+  data: string
+  itens: { produto_id: string; quantidade: number; valor_unitario: number }[]
+}

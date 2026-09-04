@@ -93,3 +93,22 @@ export interface FornecedorInput {
   endereco_cep: string | null
   observacoes: string | null
 }
+
+export interface Produto {
+  id: string
+  codigo: string
+  codigo_barras: string | null
+  nome: string
+  unidade: string
+  categoria: string | null
+  ativo: boolean
+  created_at: string
+}
+
+export interface ProdutoInput {
+  codigo: string
+  codigo_barras: string | null
+  nome: string
+  unidade: string
+  categoria: string | null
+}

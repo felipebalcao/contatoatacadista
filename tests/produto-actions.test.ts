@@ -54,6 +54,14 @@ describe('produto-actions', () => {
     ).rejects.toThrow('Já existe um produto cadastrado com esse código.')
   })
 
+  it('rejeita código duplicado ao editar', async () => {
+    await createProduto(inputBase)
+    const outro = await createProduto({ ...inputBase, codigo: 'TESTE-0002', nome: 'Outro' })
+    await expect(
+      updateProduto(outro.id, { ...inputBase, codigo: CODIGO_TESTE })
+    ).rejects.toThrow('Já existe um produto cadastrado com esse código.')
+  })
+
   it('atualiza um produto existente', async () => {
     const produto = await createProduto({ ...inputBase, nome: 'Nome Original' })
 
@@ -74,6 +82,10 @@ describe('produto-actions', () => {
 
     expect(resultados.some((p) => p.codigo === CODIGO_TESTE)).toBe(true)
     expect(resultados.some((p) => p.codigo === 'TESTE-0002')).toBe(false)
+
+    const porCodigo = await listProdutos('TESTE-0002')
+    expect(porCodigo.some((p) => p.codigo === 'TESTE-0002')).toBe(true)
+    expect(porCodigo.some((p) => p.codigo === CODIGO_TESTE)).toBe(false)
   })
 
   it('inativa e reativa um produto', async () => {

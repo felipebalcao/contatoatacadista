@@ -36,7 +36,7 @@ export async function createProduto(input: ProdutoInput): Promise<Produto> {
   const { data, error } = await supabase
     .from('produtos')
     .insert({
-      codigo: input.codigo,
+      codigo: input.codigo.trim(),
       codigo_barras: input.codigo_barras,
       nome: input.nome,
       unidade: input.unidade,
@@ -61,7 +61,7 @@ export async function updateProduto(id: string, input: ProdutoInput): Promise<Pr
   const { data, error } = await supabase
     .from('produtos')
     .update({
-      codigo: input.codigo,
+      codigo: input.codigo.trim(),
       codigo_barras: input.codigo_barras,
       nome: input.nome,
       unidade: input.unidade,

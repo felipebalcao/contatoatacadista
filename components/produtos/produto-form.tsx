@@ -8,7 +8,13 @@ import { Label } from '@/components/ui/label'
 import { createProduto, updateProduto } from '@/actions/produto-actions'
 import type { Produto, ProdutoInput } from '@/lib/types/database'
 
-export function ProdutoForm({ produto }: { produto?: Produto }) {
+export function ProdutoForm({
+  produto,
+  codigoSugerido,
+}: {
+  produto?: Produto
+  codigoSugerido?: string
+}) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -47,7 +53,7 @@ export function ProdutoForm({ produto }: { produto?: Produto }) {
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="codigo">Código</Label>
-          <Input id="codigo" name="codigo" defaultValue={produto?.codigo} required />
+          <Input id="codigo" name="codigo" defaultValue={produto?.codigo ?? codigoSugerido} required />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="codigo_barras">Código de barras</Label>

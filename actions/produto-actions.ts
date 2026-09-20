@@ -2,7 +2,10 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertModuleAccess } from '@/lib/auth/assert-module-access'
+import { calcularProximoCodigo } from '@/lib/produtos/proximo-codigo'
 import type { Produto, ProdutoInput } from '@/lib/types/database'
+
+const TAMANHO_PAGINA = 1000
 
 function quotePostgrestValue(value: string): string {
   return `"${value.replace(/["\\]/g, '\\$&')}"`
@@ -21,6 +24,27 @@ export async function listProdutos(query?: string): Promise<Produto[]> {
   const { data, error } = await request
   if (error) throw new Error(error.message)
   return (data ?? []) as Produto[]
+}
+
+export async function getProximoCodigoProduto(): Promise<string> {
+  await assertModuleAccess('produtos')
+  const supabase = createAdminClient()
+  const codigos: string[] = []
+
+  for (let inicio = 0; ; inicio += TAMANHO_PAGINA) {
+    const { data, error } = await supabase
+      .from('produtos')
+      .select('codigo')
+      .filter('codigo', 'match', '^\\s*[0-9]{1,9}\\s*$')
+      .order('id')
+      .range(inicio, inicio + TAMANHO_PAGINA - 1)
+
+    if (error) throw new Error(error.message)
+    codigos.push(...(data ?? []).map((p) => p.codigo as string))
+    if ((data ?? []).length < TAMANHO_PAGINA) break
+  }
+
+  return calcularProximoCodigo(codigos)
 }
 
 export async function getProduto(id: string): Promise<Produto | null> {

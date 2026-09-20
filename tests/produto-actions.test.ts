@@ -5,6 +5,7 @@ import {
   updateProduto,
   listProdutos,
   toggleProdutoAtivo,
+  getProximoCodigoProduto,
 } from '@/actions/produto-actions'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import type { ProdutoInput } from '@/lib/types/database'
@@ -20,6 +21,7 @@ const ADMIN_PROFILE = {
 }
 
 const CODIGO_TESTE = 'TESTE-0001'
+const CODIGO_NUMERICO_ALTO = '899999998'
 
 const inputBase: ProdutoInput = {
   codigo: CODIGO_TESTE,
@@ -36,7 +38,7 @@ describe('produto-actions', () => {
 
   afterEach(async () => {
     const supabase = createAdminClient()
-    await supabase.from('produtos').delete().in('codigo', [CODIGO_TESTE, 'TESTE-0002'])
+    await supabase.from('produtos').delete().in('codigo', [CODIGO_TESTE, 'TESTE-0002', CODIGO_NUMERICO_ALTO])
   })
 
   it('cria um produto válido', async () => {
@@ -107,6 +109,21 @@ describe('produto-actions', () => {
     } as never)
 
     await expect(listProdutos()).rejects.toThrow('Acesso negado.')
+  })
+
+  it('sugere o próximo código sequencial a partir do maior código numérico', async () => {
+    await createProduto({ ...inputBase, codigo: CODIGO_NUMERICO_ALTO })
+
+    await expect(getProximoCodigoProduto()).resolves.toBe('899999999')
+  })
+
+  it('rejeita a sugestão de código para um usuário sem permissão de produtos', async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue({
+      ...ADMIN_PROFILE,
+      permissions: ['dashboard'],
+    } as never)
+
+    await expect(getProximoCodigoProduto()).rejects.toThrow('Acesso negado.')
   })
 
   it('busca por nome contendo vírgula não quebra o filtro', async () => {

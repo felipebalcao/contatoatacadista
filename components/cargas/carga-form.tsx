@@ -17,10 +17,12 @@ export function CargaForm({
   carga,
   fornecedores,
   produtosDisponiveis,
+  dataSugerida,
 }: {
   carga?: CargaComItens
   fornecedores: { id: string; nome: string }[]
   produtosDisponiveis: ProdutoDisponivel[]
+  dataSugerida?: string
 }) {
   const router = useRouter()
   const isEditing = Boolean(carga)
@@ -118,7 +120,7 @@ export function CargaForm({
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="data">Data</Label>
-          <Input id="data" name="data" type="date" defaultValue={carga?.data} required />
+          <Input id="data" name="data" type="date" defaultValue={carga?.data ?? dataSugerida} required />
         </div>
       </div>
 

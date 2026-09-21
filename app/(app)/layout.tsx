@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import { Sidebar } from '@/components/layout/sidebar'
-import { Topbar } from '@/components/layout/topbar'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const result = await getCurrentProfile()
@@ -11,11 +10,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar permissions={result.permissions} />
-      <div className="flex-1 flex flex-col">
-        <Topbar nome={result.profile.nome} />
-        <main className="flex-1 p-6">{children}</main>
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-100 via-zinc-100 to-zinc-200">
+      <Sidebar
+        permissions={result.permissions}
+        usuario={{
+          nome: result.profile.nome,
+          email: result.profile.email,
+          papel: result.role.nome,
+        }}
+      />
+      <div className="flex min-w-0 flex-1 flex-col pt-3">
+        <main className="flex-1 rounded-tl-3xl bg-white p-6 shadow-sm md:p-8">{children}</main>
       </div>
     </div>
   )

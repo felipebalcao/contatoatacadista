@@ -48,10 +48,7 @@ export function LoginForm({ redirectTo, hasError }: { redirectTo: string; hasErr
         />
       </div>
 
-      <Button
-        type="submit"
-        className="mt-2 h-10 w-full bg-gradient-to-r from-sky-500 to-sky-600 text-sm font-semibold shadow-sm shadow-sky-500/25 hover:from-sky-600 hover:to-sky-600"
-      >
+      <Button type="submit" className="mt-2 h-10 w-full text-sm font-semibold">
         Entrar
       </Button>
     </form>

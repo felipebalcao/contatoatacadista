@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertModuleAccess } from '@/lib/auth/assert-module-access'
+import { calcularResumoCarga } from '@/lib/cargas/resumo'
 import type { CargaComItens, CargaInput, CargaResumo } from '@/lib/types/database'
 
 export async function listCargas(query?: string): Promise<CargaResumo[]> {
@@ -10,7 +11,7 @@ export async function listCargas(query?: string): Promise<CargaResumo[]> {
 
   const { data, error } = await supabase
     .from('cargas')
-    .select('id, nome, data, ativo, fornecedores(nome), itens_carga(quantidade, valor_unitario)')
+    .select('id, nome, data, ativo, fornecedores(nome), itens_carga(quantidade, valor_unitario), pagamentos_carga(valor)')
     .order('data', { ascending: false })
 
   if (error) throw new Error(error.message)
@@ -18,13 +19,17 @@ export async function listCargas(query?: string): Promise<CargaResumo[]> {
   const cargas: CargaResumo[] = (data ?? []).map((c) => {
     const fornecedor = c.fornecedores as unknown as { nome: string } | null
     const itens = (c.itens_carga ?? []) as unknown as { quantidade: number; valor_unitario: number }[]
+    const pagamentos = (c.pagamentos_carga ?? []) as unknown as { valor: number }[]
+    const resumo = calcularResumoCarga(itens, [], pagamentos)
     return {
       id: c.id,
       nome: c.nome,
       data: c.data,
       ativo: c.ativo,
       fornecedor_nome: fornecedor?.nome ?? '',
-      total: itens.reduce((soma, item) => soma + item.quantidade * item.valor_unitario, 0),
+      total: resumo.custoTotal,
+      pago: resumo.pago,
+      falta: resumo.falta,
     }
   })
 

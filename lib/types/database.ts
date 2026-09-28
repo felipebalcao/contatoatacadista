@@ -120,6 +120,8 @@ export interface CargaResumo {
   ativo: boolean
   fornecedor_nome: string
   total: number
+  pago: number
+  falta: number
 }
 
 export interface ItemCarga {
@@ -147,4 +149,36 @@ export interface CargaInput {
   nome: string
   data: string
   itens: { produto_id: string; quantidade: number; valor_unitario: number }[]
+}
+
+export interface Custo {
+  id: string
+  carga_id: string
+  categoria: string
+  descricao: string | null
+  valor: number
+  data: string
+  created_at: string
+}
+
+export interface CustoInput {
+  categoria: string
+  descricao: string | null
+  valor: number
+  data: string
+}
+
+export interface Pagamento {
+  id: string
+  carga_id: string
+  data: string
+  valor: number
+  observacao: string | null
+  created_at: string
+}
+
+export interface PagamentoInput {
+  valor: number
+  data: string
+  observacao: string | null
 }

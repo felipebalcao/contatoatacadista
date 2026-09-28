@@ -11,6 +11,7 @@ import { CargaAbas, ABAS_CARGA, type AbaCarga } from '@/components/cargas/carga-
 import { CargaItensTabela } from '@/components/cargas/carga-itens-tabela'
 import { dataHojeSaoPaulo } from '@/lib/cargas/data-hoje'
 import { CustosSecao } from '@/components/cargas/custos-secao'
+import { PagamentosSecao } from '@/components/cargas/pagamentos-secao'
 
 export default async function CargaDetalhePage({
   params,
@@ -58,6 +59,9 @@ export default async function CargaDetalhePage({
         {abaAtiva === 'itens' && <CargaItensTabela itens={carga.itens} />}
         {abaAtiva === 'custos' && (
           <CustosSecao cargaId={carga.id} custos={custos} dataPadrao={dataHojeSaoPaulo()} />
+        )}
+        {abaAtiva === 'pagamentos' && (
+          <PagamentosSecao cargaId={carga.id} pagamentos={pagamentos} dataPadrao={dataHojeSaoPaulo()} />
         )}
       </div>
     </div>

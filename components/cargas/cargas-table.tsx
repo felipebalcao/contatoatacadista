@@ -1,14 +1,16 @@
 import Link from 'next/link'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { formatarData, formatarMoeda } from '@/lib/formatacao'
 import type { CargaResumo } from '@/lib/types/database'
 
-function formatarMoeda(valor: number): string {
-  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
-
-function formatarData(data: string): string {
-  const [ano, mes, dia] = data.split('-')
-  return `${dia}/${mes}/${ano}`
+function FaltaPagar({ falta }: { falta: number }) {
+  if (falta < 0) {
+    return <span className="text-amber-700">Pago a mais {formatarMoeda(Math.abs(falta))}</span>
+  }
+  if (falta === 0) {
+    return <span className="text-emerald-700">{formatarMoeda(0)}</span>
+  }
+  return <span>{formatarMoeda(falta)}</span>
 }
 
 export function CargasTable({
@@ -34,6 +36,8 @@ export function CargasTable({
           <th className="py-2">Fornecedor</th>
           <th className="py-2">Data</th>
           <th className="py-2">Total</th>
+          <th className="py-2">Pago</th>
+          <th className="py-2">Falta pagar</th>
           <th className="py-2">Status</th>
           <th className="py-2"></th>
         </tr>
@@ -41,10 +45,18 @@ export function CargasTable({
       <tbody>
         {cargas.map((carga) => (
           <tr key={carga.id} className="border-b">
-            <td className="py-2">{carga.nome}</td>
+            <td className="py-2">
+              <Link href={`/cargas/${carga.id}`} className="font-medium text-slate-900 hover:underline">
+                {carga.nome}
+              </Link>
+            </td>
             <td className="py-2">{carga.fornecedor_nome}</td>
             <td className="py-2">{formatarData(carga.data)}</td>
             <td className="py-2">{formatarMoeda(carga.total)}</td>
+            <td className="py-2">{formatarMoeda(carga.pago)}</td>
+            <td className="py-2">
+              <FaltaPagar falta={carga.falta} />
+            </td>
             <td className="py-2">
               <span
                 className={

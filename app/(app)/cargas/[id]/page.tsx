@@ -9,6 +9,8 @@ import { buttonVariants } from '@/components/ui/button'
 import { CargaResumoCards } from '@/components/cargas/carga-resumo-cards'
 import { CargaAbas, ABAS_CARGA, type AbaCarga } from '@/components/cargas/carga-abas'
 import { CargaItensTabela } from '@/components/cargas/carga-itens-tabela'
+import { dataHojeSaoPaulo } from '@/lib/cargas/data-hoje'
+import { CustosSecao } from '@/components/cargas/custos-secao'
 
 export default async function CargaDetalhePage({
   params,
@@ -54,6 +56,9 @@ export default async function CargaDetalhePage({
       <div className="space-y-4">
         <CargaAbas cargaId={carga.id} ativa={abaAtiva} />
         {abaAtiva === 'itens' && <CargaItensTabela itens={carga.itens} />}
+        {abaAtiva === 'custos' && (
+          <CustosSecao cargaId={carga.id} custos={custos} dataPadrao={dataHojeSaoPaulo()} />
+        )}
       </div>
     </div>
   )

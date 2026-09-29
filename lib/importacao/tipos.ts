@@ -30,7 +30,8 @@ export interface ConfiguracaoImportacao<T> {
   tituloModulo: string
   campos: CampoImportacao[]
   validarLinha: (bruta: Record<string, string>) => { valores: T | null; mensagens: string[] }
-  chaveUnica: (valores: T) => string
+  /** Retorna null quando esta linha ainda não tem uma chave de duplicidade definida (ex: código a ser gerado automaticamente). */
+  chaveUnica: (valores: T) => string | null
   listarChavesExistentes: () => Promise<string[]>
   importar: (linhas: LinhaParaImportar<T>[]) => Promise<ResultadoImportacao>
   linkListagem: string

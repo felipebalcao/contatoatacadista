@@ -66,6 +66,17 @@ export async function createProduto(input: ProdutoInput): Promise<Produto> {
       nome: input.nome,
       unidade: input.unidade,
       categoria: input.categoria,
+      referencia: input.referencia,
+      ncm: input.ncm,
+      codigo_anp: input.codigo_anp,
+      cfop_dentro_estado: input.cfop_dentro_estado,
+      cfop_fora_estado: input.cfop_fora_estado,
+      cst_icms: input.cst_icms,
+      aliquota_icms: input.aliquota_icms,
+      cst_pis: input.cst_pis,
+      aliquota_pis: input.aliquota_pis,
+      cst_cofins: input.cst_cofins,
+      aliquota_cofins: input.aliquota_cofins,
     })
     .select()
     .single()
@@ -91,6 +102,17 @@ export async function updateProduto(id: string, input: ProdutoInput): Promise<Pr
       nome: input.nome,
       unidade: input.unidade,
       categoria: input.categoria,
+      referencia: input.referencia,
+      ncm: input.ncm,
+      codigo_anp: input.codigo_anp,
+      cfop_dentro_estado: input.cfop_dentro_estado,
+      cfop_fora_estado: input.cfop_fora_estado,
+      cst_icms: input.cst_icms,
+      aliquota_icms: input.aliquota_icms,
+      cst_pis: input.cst_pis,
+      aliquota_pis: input.aliquota_pis,
+      cst_cofins: input.cst_cofins,
+      aliquota_cofins: input.aliquota_cofins,
     })
     .eq('id', id)
     .select()
@@ -125,12 +147,30 @@ export async function importarProdutos(
   linhas: LinhaParaImportar<ProdutoInput>[]
 ): Promise<ResultadoImportacao> {
   await assertModuleAccess('produtos')
+
+  const codigosNoLote = new Set(linhas.map((l) => l.valores.codigo).filter((codigo) => codigo !== ''))
+  let proximoCodigo = linhas.some((l) => l.valores.codigo === '')
+    ? Number(await getProximoCodigoProduto())
+    : null
+
   let criados = 0
   const pulados: { linha: number; motivo: string }[] = []
 
   for (const linha of linhas) {
+    let valores = linha.valores
+
+    if (valores.codigo === '') {
+      while (codigosNoLote.has(String(proximoCodigo).padStart(4, '0'))) {
+        proximoCodigo!++
+      }
+      const codigoGerado = String(proximoCodigo).padStart(4, '0')
+      codigosNoLote.add(codigoGerado)
+      proximoCodigo!++
+      valores = { ...valores, codigo: codigoGerado }
+    }
+
     try {
-      await createProduto(linha.valores)
+      await createProduto(valores)
       criados++
     } catch (err) {
       pulados.push({ linha: linha.numero, motivo: err instanceof Error ? err.message : 'Erro desconhecido.' })

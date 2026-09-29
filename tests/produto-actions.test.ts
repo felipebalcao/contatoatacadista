@@ -29,6 +29,17 @@ const inputBase: ProdutoInput = {
   nome: 'Produto Teste',
   unidade: 'un',
   categoria: null,
+  referencia: null,
+  ncm: null,
+  codigo_anp: null,
+  cfop_dentro_estado: null,
+  cfop_fora_estado: null,
+  cst_icms: null,
+  aliquota_icms: null,
+  cst_pis: null,
+  aliquota_pis: null,
+  cst_cofins: null,
+  aliquota_cofins: null,
 }
 
 describe('produto-actions', () => {
@@ -70,6 +81,41 @@ describe('produto-actions', () => {
     const atualizado = await updateProduto(produto.id, { ...inputBase, nome: 'Nome Atualizado' })
 
     expect(atualizado.nome).toBe('Nome Atualizado')
+  })
+
+  it('grava e atualiza os dados fiscais do produto', async () => {
+    const produto = await createProduto({
+      ...inputBase,
+      referencia: 'REF-123',
+      ncm: '22030000',
+      codigo_anp: '000123',
+      cfop_dentro_estado: '5405',
+      cfop_fora_estado: '6405',
+      cst_icms: '060',
+      aliquota_icms: '18',
+      cst_pis: '01',
+      aliquota_pis: '1,65',
+      cst_cofins: '01',
+      aliquota_cofins: '7,60',
+    })
+
+    expect(produto).toMatchObject({
+      referencia: 'REF-123',
+      ncm: '22030000',
+      codigo_anp: '000123',
+      cfop_dentro_estado: '5405',
+      cfop_fora_estado: '6405',
+      cst_icms: '060',
+      aliquota_icms: '18',
+      cst_pis: '01',
+      aliquota_pis: '1,65',
+      cst_cofins: '01',
+      aliquota_cofins: '7,60',
+    })
+
+    const atualizado = await updateProduto(produto.id, { ...inputBase, ncm: '22030001' })
+    expect(atualizado.ncm).toBe('22030001')
+    expect(atualizado.referencia).toBeNull()
   })
 
   it('lista produtos filtrando por nome, excluindo os que não combinam', async () => {

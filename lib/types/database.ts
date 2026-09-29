@@ -101,6 +101,17 @@ export interface Produto {
   nome: string
   unidade: string
   categoria: string | null
+  referencia: string | null
+  ncm: string | null
+  codigo_anp: string | null
+  cfop_dentro_estado: string | null
+  cfop_fora_estado: string | null
+  cst_icms: string | null
+  aliquota_icms: string | null
+  cst_pis: string | null
+  aliquota_pis: string | null
+  cst_cofins: string | null
+  aliquota_cofins: string | null
   ativo: boolean
   created_at: string
 }
@@ -111,6 +122,17 @@ export interface ProdutoInput {
   nome: string
   unidade: string
   categoria: string | null
+  referencia: string | null
+  ncm: string | null
+  codigo_anp: string | null
+  cfop_dentro_estado: string | null
+  cfop_fora_estado: string | null
+  cst_icms: string | null
+  aliquota_icms: string | null
+  cst_pis: string | null
+  aliquota_pis: string | null
+  cst_cofins: string | null
+  aliquota_cofins: string | null
 }
 
 export interface CargaResumo {

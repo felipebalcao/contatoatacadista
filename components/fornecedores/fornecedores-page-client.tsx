@@ -45,9 +45,14 @@ export function FornecedoresPageClient({ fornecedoresIniciais }: { fornecedoresI
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-lg font-semibold">Fornecedores</h1>
-        <Link href="/fornecedores/novo" className={buttonVariants({ variant: 'default' })}>
-          Novo fornecedor
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/fornecedores/importar" className={buttonVariants({ variant: 'outline' })}>
+            Importar CSV
+          </Link>
+          <Link href="/fornecedores/novo" className={buttonVariants({ variant: 'default' })}>
+            Novo fornecedor
+          </Link>
+        </div>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <form action={handleBuscar} className="flex gap-2 max-w-sm">

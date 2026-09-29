@@ -143,6 +143,20 @@ export function ImportadorCsv<T>({ config }: { config: ConfiguracaoImportacao<T>
   }
   const totalSelecionadas = linhas.filter((l) => l.incluir).length
 
+  function handleImportarOutroArquivo() {
+    setErroArquivo(null)
+    setColunasCsv([])
+    setLinhasBrutas([])
+    setMapeamento({})
+    setErroMapeamento(null)
+    setCarregandoRevisao(false)
+    setLinhas([])
+    setImportando(false)
+    setErroImportacao(null)
+    setResultado(null)
+    setEtapa('upload')
+  }
+
   return (
     <div className="max-w-4xl space-y-6">
       {etapa === 'upload' && (
@@ -279,9 +293,14 @@ export function ImportadorCsv<T>({ config }: { config: ConfiguracaoImportacao<T>
               </ul>
             </div>
           )}
-          <Link href={config.linkListagem} className={buttonVariants({ variant: 'default' })}>
-            Voltar para a listagem
-          </Link>
+          <div className="flex gap-2">
+            <Link href={config.linkListagem} className={buttonVariants({ variant: 'default' })}>
+              Voltar para a listagem
+            </Link>
+            <Button type="button" variant="ghost" onClick={handleImportarOutroArquivo}>
+              Importar outro arquivo
+            </Button>
+          </div>
         </div>
       )}
     </div>

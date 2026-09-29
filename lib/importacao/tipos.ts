@@ -12,6 +12,8 @@ export interface LinhaImportacao<T> {
   status: 'ok' | 'erro' | 'duplicada'
   mensagens: string[]
   incluir: boolean
+  /** Só preenchido quando status === 'duplicada': onde a chave já apareceu. */
+  duplicadaEm?: 'banco' | 'arquivo'
 }
 
 export interface LinhaParaImportar<T> {

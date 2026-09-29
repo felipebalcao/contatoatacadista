@@ -10,10 +10,25 @@ import { detectarDuplicadas } from '@/lib/importacao/detectar-duplicadas'
 import type {
   ConfiguracaoImportacao,
   LinhaImportacao,
+  LinhaParaImportar,
   ResultadoImportacao,
 } from '@/lib/importacao/tipos'
 
 type Etapa = 'upload' | 'mapear' | 'revisar' | 'resultado'
+
+const TAMANHO_LOTE_IMPORTACAO = 150
+
+async function lerArquivoComoTexto(arquivo: File): Promise<string> {
+  const buffer = await arquivo.arrayBuffer()
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer)
+  } catch {
+    // Exportações de CSV de planilhas em locais Windows-português costumam gravar
+    // em Windows-1252 (cp1252), não UTF-8. Sem esse fallback, caracteres acentuados
+    // corrompem silenciosamente (ex.: "José" -> "Jos�") sem nenhum erro do papaparse.
+    return new TextDecoder('windows-1252').decode(buffer)
+  }
+}
 
 export function ImportadorCsv<T>({ config }: { config: ConfiguracaoImportacao<T> }) {
   const [etapa, setEtapa] = useState<Etapa>('upload')
@@ -25,19 +40,28 @@ export function ImportadorCsv<T>({ config }: { config: ConfiguracaoImportacao<T>
   const [carregandoRevisao, setCarregandoRevisao] = useState(false)
   const [linhas, setLinhas] = useState<LinhaImportacao<T>[]>([])
   const [importando, setImportando] = useState(false)
+  const [progresso, setProgresso] = useState<{ processadas: number; total: number } | null>(null)
   const [erroImportacao, setErroImportacao] = useState<string | null>(null)
   const [resultado, setResultado] = useState<ResultadoImportacao | null>(null)
 
-  function handleArquivo(event: ChangeEvent<HTMLInputElement>) {
+  async function handleArquivo(event: ChangeEvent<HTMLInputElement>) {
     const arquivo = event.target.files?.[0]
     event.target.value = ''
     if (!arquivo) return
 
     setErroArquivo(null)
 
-    Papa.parse<Record<string, string>>(arquivo, {
+    let texto: string
+    try {
+      texto = await lerArquivoComoTexto(arquivo)
+    } catch {
+      setErroArquivo('Não foi possível ler o arquivo. Confirme que é um CSV válido.')
+      return
+    }
+
+    Papa.parse<Record<string, string>>(texto, {
       header: true,
-      skipEmptyLines: true,
+      skipEmptyLines: 'greedy',
       complete: (res) => {
         if (res.errors.length > 0) {
           setErroArquivo('Não foi possível ler o arquivo. Confirme que é um CSV válido.')
@@ -89,14 +113,20 @@ export function ImportadorCsv<T>({ config }: { config: ConfiguracaoImportacao<T>
           if (!l.valores) {
             return { numero, bruta: l.bruta, valores: null, status: 'erro', mensagens: l.mensagens, incluir: false }
           }
-          if (duplicadas[indice]) {
+          const origemDuplicada = duplicadas[indice]
+          if (origemDuplicada) {
             return {
               numero,
               bruta: l.bruta,
               valores: l.valores,
               status: 'duplicada',
-              mensagens: ['Já existe um cadastro com essa chave.'],
+              mensagens: [
+                origemDuplicada === 'banco'
+                  ? 'Já cadastrado no sistema.'
+                  : 'Repetido neste arquivo.',
+              ],
               incluir: false,
+              duplicadaEm: origemDuplicada,
             }
           }
           return { numero, bruta: l.bruta, valores: l.valores, status: 'ok', mensagens: [], incluir: true }
@@ -117,28 +147,54 @@ export function ImportadorCsv<T>({ config }: { config: ConfiguracaoImportacao<T>
     )
   }
 
-  function handleConfirmarImportacao() {
+  async function handleConfirmarImportacao() {
     const paraImportar = linhas.filter((l) => l.incluir && l.status === 'ok' && l.valores !== null)
     if (paraImportar.length === 0) return
 
+    const lotes: LinhaParaImportar<T>[][] = []
+    for (let i = 0; i < paraImportar.length; i += TAMANHO_LOTE_IMPORTACAO) {
+      lotes.push(
+        paraImportar
+          .slice(i, i + TAMANHO_LOTE_IMPORTACAO)
+          .map((l) => ({ numero: l.numero, valores: l.valores as T }))
+      )
+    }
+
     setErroImportacao(null)
     setImportando(true)
+    setProgresso({ processadas: 0, total: paraImportar.length })
 
-    config
-      .importar(paraImportar.map((l) => ({ numero: l.numero, valores: l.valores as T })))
-      .then((res) => {
-        setResultado(res)
-        setEtapa('resultado')
-      })
-      .catch((err) => {
-        setErroImportacao(err instanceof Error ? err.message : 'Erro ao importar.')
-      })
-      .finally(() => setImportando(false))
+    const resultadoAcumulado: ResultadoImportacao = { criados: 0, pulados: [] }
+
+    try {
+      // Envia em lotes, um por vez (nunca em paralelo, para não multiplicar a carga
+      // simultânea no banco): cada linha do lote re-executa assertModuleAccess no
+      // servidor, e o corpo de uma Server Action tem limite padrão de 1MB, então
+      // milhares de linhas numa única chamada podem falhar por tamanho ou demorar
+      // minutos sem nenhum feedback.
+      for (const lote of lotes) {
+        const res = await config.importar(lote)
+        resultadoAcumulado.criados += res.criados
+        resultadoAcumulado.pulados.push(...res.pulados)
+        setProgresso((atual) => ({
+          processadas: (atual?.processadas ?? 0) + lote.length,
+          total: paraImportar.length,
+        }))
+      }
+      setResultado(resultadoAcumulado)
+      setEtapa('resultado')
+    } catch (err) {
+      setErroImportacao(err instanceof Error ? err.message : 'Erro ao importar.')
+    } finally {
+      setImportando(false)
+      setProgresso(null)
+    }
   }
 
   const contagem = {
     ok: linhas.filter((l) => l.status === 'ok').length,
-    duplicada: linhas.filter((l) => l.status === 'duplicada').length,
+    duplicadaBanco: linhas.filter((l) => l.status === 'duplicada' && l.duplicadaEm === 'banco').length,
+    duplicadaArquivo: linhas.filter((l) => l.status === 'duplicada' && l.duplicadaEm === 'arquivo').length,
     erro: linhas.filter((l) => l.status === 'erro').length,
   }
   const totalSelecionadas = linhas.filter((l) => l.incluir).length
@@ -152,6 +208,7 @@ export function ImportadorCsv<T>({ config }: { config: ConfiguracaoImportacao<T>
     setCarregandoRevisao(false)
     setLinhas([])
     setImportando(false)
+    setProgresso(null)
     setErroImportacao(null)
     setResultado(null)
     setEtapa('upload')
@@ -183,26 +240,30 @@ export function ImportadorCsv<T>({ config }: { config: ConfiguracaoImportacao<T>
           </p>
           {erroMapeamento && <p className="text-sm text-red-600">{erroMapeamento}</p>}
           <div className="space-y-3">
-            {config.campos.map((campo) => (
-              <div key={campo.chave} className="grid grid-cols-2 items-center gap-4">
-                <Label>
-                  {campo.rotulo}
-                  {campo.obrigatorio ? ' *' : ''}
-                </Label>
-                <select
-                  value={mapeamento[campo.chave] ?? ''}
-                  onChange={(e) => setMapeamento((atual) => ({ ...atual, [campo.chave]: e.target.value }))}
-                  className="h-9 rounded-md border border-slate-200 px-3 text-sm"
-                >
-                  <option value="">Não importar</option>
-                  {colunasCsv.map((coluna) => (
-                    <option key={coluna} value={coluna}>
-                      {coluna}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
+            {config.campos.map((campo) => {
+              const idCampo = `importar-mapeamento-${campo.chave}`
+              return (
+                <div key={campo.chave} className="grid grid-cols-2 items-center gap-4">
+                  <Label htmlFor={idCampo}>
+                    {campo.rotulo}
+                    {campo.obrigatorio ? ' *' : ''}
+                  </Label>
+                  <select
+                    id={idCampo}
+                    value={mapeamento[campo.chave] ?? ''}
+                    onChange={(e) => setMapeamento((atual) => ({ ...atual, [campo.chave]: e.target.value }))}
+                    className="h-9 rounded-md border border-slate-200 px-3 text-sm"
+                  >
+                    <option value="">Não importar</option>
+                    {colunasCsv.map((coluna) => (
+                      <option key={coluna} value={coluna}>
+                        {coluna}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )
+            })}
           </div>
           <div className="flex gap-2">
             <Button type="button" onClick={handleMapeamentoConfirmado} disabled={carregandoRevisao}>
@@ -218,49 +279,72 @@ export function ImportadorCsv<T>({ config }: { config: ConfiguracaoImportacao<T>
       {etapa === 'revisar' && (
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
-            {contagem.ok} pronta(s) para importar, {contagem.duplicada} já cadastrada(s), {contagem.erro} com
-            erro.
+            {contagem.ok} pronta(s) para importar, {contagem.duplicadaBanco} já cadastrada(s),{' '}
+            {contagem.duplicadaArquivo} repetida(s) neste arquivo, {contagem.erro} com erro.
           </p>
           {erroImportacao && <p className="text-sm text-red-600">{erroImportacao}</p>}
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-slate-500">
-                <th className="py-2"></th>
-                <th className="py-2">Linha</th>
-                <th className="py-2">Status</th>
-                <th className="py-2">Detalhe</th>
-              </tr>
-            </thead>
-            <tbody>
-              {linhas.map((linha) => (
-                <tr key={linha.numero} className="border-b">
-                  <td className="py-2">
-                    <input
-                      type="checkbox"
-                      checked={linha.incluir}
-                      disabled={linha.status !== 'ok'}
-                      onChange={() => alternarLinha(linha.numero)}
-                    />
-                  </td>
-                  <td className="py-2">{linha.numero}</td>
-                  <td className="py-2">
-                    <span
-                      className={
-                        linha.status === 'ok'
-                          ? 'rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700'
-                          : linha.status === 'duplicada'
-                            ? 'rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700'
-                            : 'rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700'
-                      }
-                    >
-                      {linha.status === 'ok' ? 'Ok' : linha.status === 'duplicada' ? 'Já existe' : 'Erro'}
-                    </span>
-                  </td>
-                  <td className="py-2 text-slate-500">{linha.mensagens.join(' ')}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-slate-500">
+                  <th className="py-2"></th>
+                  <th className="py-2">Linha</th>
+                  {config.campos.map((campo) => (
+                    <th key={campo.chave} className="px-2 py-2 whitespace-nowrap">
+                      {campo.rotulo}
+                    </th>
+                  ))}
+                  <th className="px-2 py-2">Status</th>
+                  <th className="px-2 py-2">Detalhe</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {linhas.map((linha) => (
+                  <tr key={linha.numero} className="border-b">
+                    <td className="py-2">
+                      <input
+                        type="checkbox"
+                        checked={linha.incluir}
+                        disabled={linha.status !== 'ok'}
+                        onChange={() => alternarLinha(linha.numero)}
+                      />
+                    </td>
+                    <td className="py-2">{linha.numero}</td>
+                    {config.campos.map((campo) => (
+                      <td key={campo.chave} className="px-2 py-2 whitespace-nowrap text-slate-600">
+                        {linha.bruta[campo.chave]}
+                      </td>
+                    ))}
+                    <td className="px-2 py-2">
+                      <span
+                        className={
+                          linha.status === 'ok'
+                            ? 'rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700'
+                            : linha.status === 'duplicada'
+                              ? 'rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700'
+                              : 'rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700'
+                        }
+                      >
+                        {linha.status === 'ok'
+                          ? 'Ok'
+                          : linha.status === 'duplicada'
+                            ? linha.duplicadaEm === 'banco'
+                              ? 'Já cadastrado'
+                              : 'Repetido no arquivo'
+                            : 'Erro'}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2 text-slate-500">{linha.mensagens.join(' ')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {importando && progresso && progresso.total > TAMANHO_LOTE_IMPORTACAO && (
+            <p className="text-sm text-slate-500">
+              Importando {progresso.processadas} de {progresso.total} linhas...
+            </p>
+          )}
           <div className="flex gap-2">
             <Button
               type="button"

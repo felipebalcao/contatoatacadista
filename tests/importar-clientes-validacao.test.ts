@@ -48,6 +48,12 @@ describe('validarLinhaCliente', () => {
     expect(mensagens).toContain('Informe o nome.')
   })
 
+  it('rejeita nome contendo apenas espaços em branco', () => {
+    const { valores, mensagens } = validarLinhaCliente({ ...LINHA_BASE, documento: '111.444.777-35', nome: '   ' })
+    expect(valores).toBeNull()
+    expect(mensagens).toContain('Informe o nome.')
+  })
+
   it('aceita campos opcionais vazios como null', () => {
     const { valores } = validarLinhaCliente({ ...LINHA_BASE, documento: '111.444.777-35' })
     expect(valores?.telefone).toBeNull()

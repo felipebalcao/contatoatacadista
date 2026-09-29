@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { assertModuleAccess } from '@/lib/auth/assert-module-access'
 import { normalizarDocumento, validarDocumento } from '@/lib/validation/documento'
 import type { Cliente, ClienteInput } from '@/lib/types/database'
+import type { LinhaParaImportar, ResultadoImportacao } from '@/lib/importacao/tipos'
 
 function quotePostgrestValue(value: string): string {
   return `"${value.replace(/["\\]/g, '\\$&')}"`
@@ -119,4 +120,31 @@ export async function toggleClienteAtivo(id: string, ativo: boolean): Promise<vo
   const supabase = createAdminClient()
   const { error } = await supabase.from('clientes').update({ ativo }).eq('id', id)
   if (error) throw new Error(error.message)
+}
+
+export async function listDocumentosClientes(): Promise<string[]> {
+  await assertModuleAccess('clientes')
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('clientes').select('documento')
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((c) => c.documento as string)
+}
+
+export async function importarClientes(
+  linhas: LinhaParaImportar<ClienteInput>[]
+): Promise<ResultadoImportacao> {
+  await assertModuleAccess('clientes')
+  let criados = 0
+  const pulados: { linha: number; motivo: string }[] = []
+
+  for (const linha of linhas) {
+    try {
+      await createCliente(linha.valores)
+      criados++
+    } catch (err) {
+      pulados.push({ linha: linha.numero, motivo: err instanceof Error ? err.message : 'Erro desconhecido.' })
+    }
+  }
+
+  return { criados, pulados }
 }

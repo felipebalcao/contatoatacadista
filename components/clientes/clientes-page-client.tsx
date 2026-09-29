@@ -45,9 +45,14 @@ export function ClientesPageClient({ clientesIniciais }: { clientesIniciais: Cli
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-lg font-semibold">Clientes</h1>
-        <Link href="/clientes/novo" className={buttonVariants({ variant: 'default' })}>
-          Novo cliente
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/clientes/importar" className={buttonVariants({ variant: 'outline' })}>
+            Importar CSV
+          </Link>
+          <Link href="/clientes/novo" className={buttonVariants({ variant: 'default' })}>
+            Novo cliente
+          </Link>
+        </div>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <form action={handleBuscar} className="flex gap-2 max-w-sm">

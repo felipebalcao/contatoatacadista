@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { assertModuleAccess } from '@/lib/auth/assert-module-access'
 import { calcularProximoCodigo } from '@/lib/produtos/proximo-codigo'
 import type { Produto, ProdutoInput } from '@/lib/types/database'
+import type { LinhaParaImportar, ResultadoImportacao } from '@/lib/importacao/tipos'
 
 const TAMANHO_PAGINA = 1000
 
@@ -110,4 +111,31 @@ export async function toggleProdutoAtivo(id: string, ativo: boolean): Promise<vo
   const supabase = createAdminClient()
   const { error } = await supabase.from('produtos').update({ ativo }).eq('id', id)
   if (error) throw new Error(error.message)
+}
+
+export async function listCodigosProdutos(): Promise<string[]> {
+  await assertModuleAccess('produtos')
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('produtos').select('codigo')
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((p) => p.codigo as string)
+}
+
+export async function importarProdutos(
+  linhas: LinhaParaImportar<ProdutoInput>[]
+): Promise<ResultadoImportacao> {
+  await assertModuleAccess('produtos')
+  let criados = 0
+  const pulados: { linha: number; motivo: string }[] = []
+
+  for (const linha of linhas) {
+    try {
+      await createProduto(linha.valores)
+      criados++
+    } catch (err) {
+      pulados.push({ linha: linha.numero, motivo: err instanceof Error ? err.message : 'Erro desconhecido.' })
+    }
+  }
+
+  return { criados, pulados }
 }

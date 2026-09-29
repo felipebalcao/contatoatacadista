@@ -45,9 +45,14 @@ export function ProdutosPageClient({ produtosIniciais }: { produtosIniciais: Pro
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-lg font-semibold">Produtos</h1>
-        <Link href="/produtos/novo" className={buttonVariants({ variant: 'default' })}>
-          Novo produto
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/produtos/importar" className={buttonVariants({ variant: 'outline' })}>
+            Importar CSV
+          </Link>
+          <Link href="/produtos/novo" className={buttonVariants({ variant: 'default' })}>
+            Novo produto
+          </Link>
+        </div>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <form action={handleBuscar} className="flex gap-2 max-w-sm">

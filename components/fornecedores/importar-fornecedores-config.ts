@@ -16,6 +16,9 @@ const CAMPOS: CampoImportacao[] = [
   { chave: 'endereco_uf', rotulo: 'UF', obrigatorio: false },
   { chave: 'endereco_cep', rotulo: 'CEP', obrigatorio: false },
   { chave: 'observacoes', rotulo: 'Observações', obrigatorio: false },
+  { chave: 'codigo', rotulo: 'Código', obrigatorio: false },
+  { chave: 'inscricao_estadual', rotulo: 'Inscrição Estadual', obrigatorio: false, apelidos: ['insc estadual', 'ie'] },
+  { chave: 'contato', rotulo: 'Contato', obrigatorio: false },
 ]
 
 export function validarLinhaFornecedor(
@@ -49,6 +52,9 @@ export function validarLinhaFornecedor(
       endereco_uf: bruta.endereco_uf.trim() || null,
       endereco_cep: bruta.endereco_cep.trim() || null,
       observacoes: bruta.observacoes.trim() || null,
+      codigo: bruta.codigo.trim() || null,
+      inscricao_estadual: bruta.inscricao_estadual.trim() || null,
+      contato: bruta.contato.trim() || null,
     },
     mensagens: [],
   }

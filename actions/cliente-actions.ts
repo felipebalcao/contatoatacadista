@@ -61,6 +61,9 @@ export async function createCliente(input: ClienteInput): Promise<Cliente> {
       endereco_uf: input.endereco_uf,
       endereco_cep: input.endereco_cep,
       observacoes: input.observacoes,
+      codigo: input.codigo,
+      inscricao_estadual: input.inscricao_estadual,
+      contato: input.contato,
     })
     .select()
     .single()
@@ -100,6 +103,9 @@ export async function updateCliente(id: string, input: ClienteInput): Promise<Cl
       endereco_uf: input.endereco_uf,
       endereco_cep: input.endereco_cep,
       observacoes: input.observacoes,
+      codigo: input.codigo,
+      inscricao_estadual: input.inscricao_estadual,
+      contato: input.contato,
     })
     .eq('id', id)
     .select()

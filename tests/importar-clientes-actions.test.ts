@@ -32,6 +32,9 @@ const CLIENTE_BASE: ClienteInput = {
   endereco_uf: null,
   endereco_cep: null,
   observacoes: null,
+  codigo: null,
+  inscricao_estadual: null,
+  contato: null,
 }
 
 describe('importarClientes / listDocumentosClientes', () => {

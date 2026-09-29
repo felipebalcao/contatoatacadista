@@ -39,6 +39,9 @@ export interface Cliente {
   endereco_uf: string | null
   endereco_cep: string | null
   observacoes: string | null
+  codigo: string | null
+  inscricao_estadual: string | null
+  contato: string | null
   ativo: boolean
   created_at: string
 }
@@ -57,6 +60,9 @@ export interface ClienteInput {
   endereco_uf: string | null
   endereco_cep: string | null
   observacoes: string | null
+  codigo: string | null
+  inscricao_estadual: string | null
+  contato: string | null
 }
 
 export interface Fornecedor {
@@ -74,6 +80,9 @@ export interface Fornecedor {
   endereco_uf: string | null
   endereco_cep: string | null
   observacoes: string | null
+  codigo: string | null
+  inscricao_estadual: string | null
+  contato: string | null
   ativo: boolean
   created_at: string
 }
@@ -92,6 +101,9 @@ export interface FornecedorInput {
   endereco_uf: string | null
   endereco_cep: string | null
   observacoes: string | null
+  codigo: string | null
+  inscricao_estadual: string | null
+  contato: string | null
 }
 
 export interface Produto {

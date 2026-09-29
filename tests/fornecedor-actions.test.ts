@@ -35,6 +35,9 @@ const inputBase: FornecedorInput = {
   endereco_uf: null,
   endereco_cep: null,
   observacoes: null,
+  codigo: null,
+  inscricao_estadual: null,
+  contato: null,
 }
 
 describe('fornecedor-actions', () => {

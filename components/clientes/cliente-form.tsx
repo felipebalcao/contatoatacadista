@@ -40,6 +40,9 @@ export function ClienteForm({ cliente }: { cliente?: Cliente }) {
       endereco_uf: (formData.get('endereco_uf') as string) || null,
       endereco_cep: (formData.get('endereco_cep') as string) || null,
       observacoes: (formData.get('observacoes') as string) || null,
+      codigo: (formData.get('codigo') as string) || null,
+      inscricao_estadual: (formData.get('inscricao_estadual') as string) || null,
+      contato: (formData.get('contato') as string) || null,
     }
 
     startTransition(async () => {
@@ -112,6 +115,22 @@ export function ClienteForm({ cliente }: { cliente?: Cliente }) {
           <Input id="email" name="email" type="email" defaultValue={cliente?.email ?? ''} />
         </div>
       </div>
+
+      <fieldset className="grid grid-cols-3 gap-4">
+        <legend className="text-sm font-medium mb-1">Dados adicionais</legend>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="codigo">Código (sistema antigo)</Label>
+          <Input id="codigo" name="codigo" defaultValue={cliente?.codigo ?? ''} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="inscricao_estadual">Inscrição Estadual</Label>
+          <Input id="inscricao_estadual" name="inscricao_estadual" defaultValue={cliente?.inscricao_estadual ?? ''} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="contato">Contato</Label>
+          <Input id="contato" name="contato" defaultValue={cliente?.contato ?? ''} />
+        </div>
+      </fieldset>
 
       <fieldset className="space-y-4">
         <legend className="text-sm font-medium">Endereço</legend>

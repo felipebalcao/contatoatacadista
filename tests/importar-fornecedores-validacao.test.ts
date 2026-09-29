@@ -14,6 +14,9 @@ const LINHA_BASE = {
   endereco_uf: '',
   endereco_cep: '',
   observacoes: '',
+  codigo: '',
+  inscricao_estadual: '',
+  contato: '',
 }
 
 describe('validarLinhaFornecedor', () => {
@@ -58,5 +61,18 @@ describe('validarLinhaFornecedor', () => {
     const { valores } = validarLinhaFornecedor({ ...LINHA_BASE, documento: '111.444.777-35' })
     expect(valores?.telefone).toBeNull()
     expect(valores?.email).toBeNull()
+  })
+
+  it('preenche código, inscrição estadual e contato quando mapeados', () => {
+    const { valores } = validarLinhaFornecedor({
+      ...LINHA_BASE,
+      documento: '111.444.777-35',
+      codigo: '00254',
+      inscricao_estadual: '741.136554.0077',
+      contato: 'Maria',
+    })
+    expect(valores?.codigo).toBe('00254')
+    expect(valores?.inscricao_estadual).toBe('741.136554.0077')
+    expect(valores?.contato).toBe('Maria')
   })
 })

@@ -58,17 +58,17 @@ export function PagamentoModal({
     }
 
     startTransition(async () => {
-      try {
-        if (pagamento) {
-          await updatePagamento(pagamento.id, input)
-        } else {
-          await createPagamento(cargaId, input)
-        }
-        onOpenChange(false)
-        router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao salvar o pagamento.')
+      const resultado = pagamento
+        ? await updatePagamento(pagamento.id, input)
+        : await createPagamento(cargaId, input)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+
+      onOpenChange(false)
+      router.refresh()
     })
   }
 

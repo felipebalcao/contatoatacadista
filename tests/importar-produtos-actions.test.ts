@@ -67,6 +67,7 @@ describe('importarProdutos / listCodigosProdutos', () => {
       categoria: null,
       ...CAMPOS_FISCAIS_NULOS,
     })
+    if (!original.sucesso) throw new Error('esperado sucesso')
 
     const linhas: LinhaParaImportar<ProdutoInput>[] = [
       {
@@ -101,7 +102,7 @@ describe('importarProdutos / listCodigosProdutos', () => {
     ])
 
     const supabase = createAdminClient()
-    const { data: existente } = await supabase.from('produtos').select('nome, unidade').eq('id', original.id).single()
+    const { data: existente } = await supabase.from('produtos').select('nome, unidade').eq('id', original.dados.id).single()
     expect(existente?.nome).toBe('Nome Original')
     expect(existente?.unidade).toBe('un')
   })

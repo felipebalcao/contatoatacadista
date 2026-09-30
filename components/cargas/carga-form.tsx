@@ -81,17 +81,15 @@ export function CargaForm({
     }
 
     startTransition(async () => {
-      try {
-        if (isEditing && carga) {
-          await updateCarga(carga.id, input)
-        } else {
-          await createCarga(input)
-        }
-        router.push('/cargas')
-        router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao salvar carga.')
+      const resultado = isEditing && carga ? await updateCarga(carga.id, input) : await createCarga(input)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+
+      router.push('/cargas')
+      router.refresh()
     })
   }
 

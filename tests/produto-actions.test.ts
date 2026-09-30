@@ -53,38 +53,43 @@ describe('produto-actions', () => {
   })
 
   it('cria um produto válido', async () => {
-    const produto = await createProduto(inputBase)
+    const resultado = await createProduto(inputBase)
+    if (!resultado.sucesso) throw new Error('esperado sucesso')
 
-    expect(produto.codigo).toBe(CODIGO_TESTE)
-    expect(produto.ativo).toBe(true)
+    expect(resultado.dados.codigo).toBe(CODIGO_TESTE)
+    expect(resultado.dados.ativo).toBe(true)
   })
 
   it('rejeita código duplicado', async () => {
     await createProduto({ ...inputBase, nome: 'Primeiro Cadastro' })
 
-    await expect(
-      createProduto({ ...inputBase, nome: 'Segundo Cadastro' })
-    ).rejects.toThrow('Já existe um produto cadastrado com esse código.')
+    const resultado = await createProduto({ ...inputBase, nome: 'Segundo Cadastro' })
+
+    expect(resultado).toEqual({ sucesso: false, erro: 'Já existe um produto cadastrado com esse código.' })
   })
 
   it('rejeita código duplicado ao editar', async () => {
     await createProduto(inputBase)
-    const outro = await createProduto({ ...inputBase, codigo: 'TESTE-0002', nome: 'Outro' })
-    await expect(
-      updateProduto(outro.id, { ...inputBase, codigo: CODIGO_TESTE })
-    ).rejects.toThrow('Já existe um produto cadastrado com esse código.')
+    const outroResultado = await createProduto({ ...inputBase, codigo: 'TESTE-0002', nome: 'Outro' })
+    if (!outroResultado.sucesso) throw new Error('esperado sucesso')
+
+    const resultado = await updateProduto(outroResultado.dados.id, { ...inputBase, codigo: CODIGO_TESTE })
+
+    expect(resultado).toEqual({ sucesso: false, erro: 'Já existe um produto cadastrado com esse código.' })
   })
 
   it('atualiza um produto existente', async () => {
-    const produto = await createProduto({ ...inputBase, nome: 'Nome Original' })
+    const criado = await createProduto({ ...inputBase, nome: 'Nome Original' })
+    if (!criado.sucesso) throw new Error('esperado sucesso')
 
-    const atualizado = await updateProduto(produto.id, { ...inputBase, nome: 'Nome Atualizado' })
+    const atualizado = await updateProduto(criado.dados.id, { ...inputBase, nome: 'Nome Atualizado' })
+    if (!atualizado.sucesso) throw new Error('esperado sucesso')
 
-    expect(atualizado.nome).toBe('Nome Atualizado')
+    expect(atualizado.dados.nome).toBe('Nome Atualizado')
   })
 
   it('grava e atualiza os dados fiscais do produto', async () => {
-    const produto = await createProduto({
+    const criado = await createProduto({
       ...inputBase,
       referencia: 'REF-123',
       ncm: '22030000',
@@ -98,8 +103,9 @@ describe('produto-actions', () => {
       cst_cofins: '01',
       aliquota_cofins: '7,60',
     })
+    if (!criado.sucesso) throw new Error('esperado sucesso')
 
-    expect(produto).toMatchObject({
+    expect(criado.dados).toMatchObject({
       referencia: 'REF-123',
       ncm: '22030000',
       codigo_anp: '000123',
@@ -113,9 +119,10 @@ describe('produto-actions', () => {
       aliquota_cofins: '7,60',
     })
 
-    const atualizado = await updateProduto(produto.id, { ...inputBase, ncm: '22030001' })
-    expect(atualizado.ncm).toBe('22030001')
-    expect(atualizado.referencia).toBeNull()
+    const atualizado = await updateProduto(criado.dados.id, { ...inputBase, ncm: '22030001' })
+    if (!atualizado.sucesso) throw new Error('esperado sucesso')
+    expect(atualizado.dados.ncm).toBe('22030001')
+    expect(atualizado.dados.referencia).toBeNull()
   })
 
   it('lista produtos filtrando por nome, excluindo os que não combinam', async () => {
@@ -137,15 +144,16 @@ describe('produto-actions', () => {
   })
 
   it('inativa e reativa um produto', async () => {
-    const produto = await createProduto(inputBase)
+    const criado = await createProduto(inputBase)
+    if (!criado.sucesso) throw new Error('esperado sucesso')
 
-    await toggleProdutoAtivo(produto.id, false)
+    await toggleProdutoAtivo(criado.dados.id, false)
     let lista = await listProdutos()
-    expect(lista.find((p) => p.id === produto.id)?.ativo).toBe(false)
+    expect(lista.find((p) => p.id === criado.dados.id)?.ativo).toBe(false)
 
-    await toggleProdutoAtivo(produto.id, true)
+    await toggleProdutoAtivo(criado.dados.id, true)
     lista = await listProdutos()
-    expect(lista.find((p) => p.id === produto.id)?.ativo).toBe(true)
+    expect(lista.find((p) => p.id === criado.dados.id)?.ativo).toBe(true)
   })
 
   it('rejeita chamadas de um usuário sem permissão de produtos', async () => {

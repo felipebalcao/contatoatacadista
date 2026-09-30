@@ -51,32 +51,40 @@ describe('fornecedor-actions', () => {
   })
 
   it('cria um fornecedor PF válido', async () => {
-    const fornecedor = await createFornecedor(inputBase)
+    const resultado = await createFornecedor(inputBase)
 
-    expect(fornecedor.documento).toBe(DOCUMENTO_TESTE)
-    expect(fornecedor.ativo).toBe(true)
+    expect(resultado.sucesso).toBe(true)
+    if (!resultado.sucesso) throw new Error('esperado sucesso')
+    expect(resultado.dados.documento).toBe(DOCUMENTO_TESTE)
+    expect(resultado.dados.ativo).toBe(true)
   })
 
   it('rejeita documento com dígito verificador inválido', async () => {
-    await expect(
-      createFornecedor({ ...inputBase, documento: '111.444.777-36' })
-    ).rejects.toThrow('Documento inválido.')
+    const resultado = await createFornecedor({ ...inputBase, documento: '111.444.777-36' })
+
+    expect(resultado).toEqual({ sucesso: false, erro: 'Documento inválido.' })
   })
 
   it('rejeita documento duplicado', async () => {
     await createFornecedor({ ...inputBase, nome: 'Primeiro Cadastro' })
 
-    await expect(
-      createFornecedor({ ...inputBase, nome: 'Segundo Cadastro' })
-    ).rejects.toThrow('Já existe um fornecedor cadastrado com esse documento.')
+    const resultado = await createFornecedor({ ...inputBase, nome: 'Segundo Cadastro' })
+
+    expect(resultado).toEqual({
+      sucesso: false,
+      erro: 'Já existe um fornecedor cadastrado com esse documento.',
+    })
   })
 
   it('atualiza um fornecedor existente', async () => {
-    const fornecedor = await createFornecedor({ ...inputBase, nome: 'Nome Original' })
+    const criado = await createFornecedor({ ...inputBase, nome: 'Nome Original' })
+    if (!criado.sucesso) throw new Error('esperado sucesso')
 
-    const atualizado = await updateFornecedor(fornecedor.id, { ...inputBase, nome: 'Nome Atualizado' })
+    const atualizado = await updateFornecedor(criado.dados.id, { ...inputBase, nome: 'Nome Atualizado' })
 
-    expect(atualizado.nome).toBe('Nome Atualizado')
+    expect(atualizado.sucesso).toBe(true)
+    if (!atualizado.sucesso) throw new Error('esperado sucesso')
+    expect(atualizado.dados.nome).toBe('Nome Atualizado')
   })
 
   it('lista fornecedores filtrando por nome, excluindo os que não combinam', async () => {
@@ -98,15 +106,16 @@ describe('fornecedor-actions', () => {
   })
 
   it('inativa e reativa um fornecedor', async () => {
-    const fornecedor = await createFornecedor(inputBase)
+    const criado = await createFornecedor(inputBase)
+    if (!criado.sucesso) throw new Error('esperado sucesso')
 
-    await toggleFornecedorAtivo(fornecedor.id, false)
+    await toggleFornecedorAtivo(criado.dados.id, false)
     let lista = await listFornecedores()
-    expect(lista.find((f) => f.id === fornecedor.id)?.ativo).toBe(false)
+    expect(lista.find((f) => f.id === criado.dados.id)?.ativo).toBe(false)
 
-    await toggleFornecedorAtivo(fornecedor.id, true)
+    await toggleFornecedorAtivo(criado.dados.id, true)
     lista = await listFornecedores()
-    expect(lista.find((f) => f.id === fornecedor.id)?.ativo).toBe(true)
+    expect(lista.find((f) => f.id === criado.dados.id)?.ativo).toBe(true)
   })
 
   it('rejeita chamadas de um usuário sem permissão de fornecedores', async () => {

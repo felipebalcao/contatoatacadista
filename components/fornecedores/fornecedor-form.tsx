@@ -46,17 +46,17 @@ export function FornecedorForm({ fornecedor }: { fornecedor?: Fornecedor }) {
     }
 
     startTransition(async () => {
-      try {
-        if (isEditing && fornecedor) {
-          await updateFornecedor(fornecedor.id, input)
-        } else {
-          await createFornecedor(input)
-        }
-        router.push('/fornecedores')
-        router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao salvar fornecedor.')
+      const resultado = isEditing && fornecedor
+        ? await updateFornecedor(fornecedor.id, input)
+        : await createFornecedor(input)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+
+      router.push('/fornecedores')
+      router.refresh()
     })
   }
 

@@ -37,12 +37,12 @@ export function CustosSecao({
     if (!window.confirm(`Excluir o custo "${custo.categoria}" de ${formatarMoeda(custo.valor)}?`)) return
     setError(null)
     startTransition(async () => {
-      try {
-        await deleteCusto(custo.id)
-        router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao excluir o custo.')
+      const resultado = await deleteCusto(custo.id)
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+      router.refresh()
     })
   }
 

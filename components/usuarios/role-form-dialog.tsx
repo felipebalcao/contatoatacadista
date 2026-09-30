@@ -36,17 +36,16 @@ export function RoleFormDialog({
     const selected = MODULE_KEYS.filter((key) => formData.get(`module-${key}`) === 'on')
 
     startTransition(async () => {
-      try {
-        if (isEditing && role) {
-          await updateRolePermissions(role.id, selected)
-        } else {
-          await createRole(nome, selected)
-        }
-        setOpen(false)
-        onSaved()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao salvar papel.')
+      const resultado = isEditing && role
+        ? await updateRolePermissions(role.id, selected)
+        : await createRole(nome, selected)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+      setOpen(false)
+      onSaved()
     })
   }
 
@@ -54,13 +53,13 @@ export function RoleFormDialog({
     if (!role) return
     setError(null)
     startTransition(async () => {
-      try {
-        await deleteRole(role.id)
-        setOpen(false)
-        onSaved()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao excluir papel.')
+      const resultado = await deleteRole(role.id)
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+      setOpen(false)
+      onSaved()
     })
   }
 

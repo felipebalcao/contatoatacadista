@@ -46,17 +46,17 @@ export function ClienteForm({ cliente }: { cliente?: Cliente }) {
     }
 
     startTransition(async () => {
-      try {
-        if (isEditing && cliente) {
-          await updateCliente(cliente.id, input)
-        } else {
-          await createCliente(input)
-        }
-        router.push('/clientes')
-        router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao salvar cliente.')
+      const resultado = isEditing && cliente
+        ? await updateCliente(cliente.id, input)
+        : await createCliente(input)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+
+      router.push('/clientes')
+      router.refresh()
     })
   }
 

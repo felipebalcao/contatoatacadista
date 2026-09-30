@@ -35,10 +35,12 @@ describe('user-actions', () => {
     const supabase = createAdminClient()
     const { data: financeiro } = await supabase.from('roles').select('id').eq('nome', 'Financeiro').single()
 
-    const profile = await createUser('Vendedor Teste', TEST_EMAIL, financeiro!.id)
+    const resultado = await createUser('Vendedor Teste', TEST_EMAIL, financeiro!.id)
 
-    expect(profile.email).toBe(TEST_EMAIL)
-    expect(profile.role_id).toBe(financeiro!.id)
+    expect(resultado.sucesso).toBe(true)
+    if (!resultado.sucesso) throw new Error('esperava sucesso')
+    expect(resultado.dados.email).toBe(TEST_EMAIL)
+    expect(resultado.dados.role_id).toBe(financeiro!.id)
 
     const { data: authUser } = await supabase.auth.admin.listUsers()
     expect(authUser.users.some((u) => u.email === TEST_EMAIL)).toBe(true)
@@ -47,7 +49,8 @@ describe('user-actions', () => {
   it('lista usuários com nome do papel', async () => {
     const supabase = createAdminClient()
     const { data: financeiro } = await supabase.from('roles').select('id').eq('nome', 'Financeiro').single()
-    await createUser('Vendedor Teste', TEST_EMAIL, financeiro!.id)
+    const resultado = await createUser('Vendedor Teste', TEST_EMAIL, financeiro!.id)
+    if (!resultado.sucesso) throw new Error(`esperava sucesso, recebi: ${resultado.erro}`)
 
     const users = await listUsers()
     const created = users.find((u) => u.email === TEST_EMAIL)

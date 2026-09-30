@@ -67,17 +67,15 @@ export function CustoModal({
     }
 
     startTransition(async () => {
-      try {
-        if (custo) {
-          await updateCusto(custo.id, input)
-        } else {
-          await createCusto(cargaId, input)
-        }
-        onOpenChange(false)
-        router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao salvar o custo.')
+      const resultado = custo ? await updateCusto(custo.id, input) : await createCusto(cargaId, input)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+
+      onOpenChange(false)
+      router.refresh()
     })
   }
 

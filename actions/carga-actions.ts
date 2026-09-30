@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { assertModuleAccess } from '@/lib/auth/assert-module-access'
 import { calcularResumoCarga } from '@/lib/cargas/resumo'
 import type { CargaComItens, CargaInput, CargaResumo } from '@/lib/types/database'
+import type { ResultadoAcao } from '@/lib/types/acao'
 
 export async function listCargas(query?: string): Promise<CargaResumo[]> {
   await assertModuleAccess('cargas')
@@ -84,11 +85,11 @@ export async function getCarga(id: string): Promise<CargaComItens | null> {
   }
 }
 
-export async function createCarga(input: CargaInput): Promise<{ id: string }> {
+export async function createCarga(input: CargaInput): Promise<ResultadoAcao<{ id: string }>> {
   await assertModuleAccess('cargas')
 
   if (input.itens.length === 0) {
-    throw new Error('A carga precisa ter pelo menos um produto.')
+    return { sucesso: false, erro: 'A carga precisa ter pelo menos um produto.' }
   }
 
   const supabase = createAdminClient()
@@ -101,19 +102,19 @@ export async function createCarga(input: CargaInput): Promise<{ id: string }> {
 
   if (error) {
     if (error.code === '23505') {
-      throw new Error('Não é possível adicionar o mesmo produto duas vezes na carga.')
+      return { sucesso: false, erro: 'Não é possível adicionar o mesmo produto duas vezes na carga.' }
     }
-    throw new Error(error.message)
+    return { sucesso: false, erro: error.message }
   }
 
-  return { id: data as string }
+  return { sucesso: true, dados: { id: data as string } }
 }
 
-export async function updateCarga(id: string, input: CargaInput): Promise<void> {
+export async function updateCarga(id: string, input: CargaInput): Promise<ResultadoAcao> {
   await assertModuleAccess('cargas')
 
   if (input.itens.length === 0) {
-    throw new Error('A carga precisa ter pelo menos um produto.')
+    return { sucesso: false, erro: 'A carga precisa ter pelo menos um produto.' }
   }
 
   const supabase = createAdminClient()
@@ -127,17 +128,20 @@ export async function updateCarga(id: string, input: CargaInput): Promise<void> 
 
   if (error) {
     if (error.code === '23505') {
-      throw new Error('Não é possível adicionar o mesmo produto duas vezes na carga.')
+      return { sucesso: false, erro: 'Não é possível adicionar o mesmo produto duas vezes na carga.' }
     }
-    throw new Error(error.message)
+    return { sucesso: false, erro: error.message }
   }
+
+  return { sucesso: true, dados: undefined }
 }
 
-export async function toggleCargaAtivo(id: string, ativo: boolean): Promise<void> {
+export async function toggleCargaAtivo(id: string, ativo: boolean): Promise<ResultadoAcao> {
   await assertModuleAccess('cargas')
   const supabase = createAdminClient()
   const { error } = await supabase.from('cargas').update({ ativo }).eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { sucesso: false, erro: error.message }
+  return { sucesso: true, dados: undefined }
 }
 
 export async function listFornecedoresAtivos(): Promise<{ id: string; nome: string }[]> {

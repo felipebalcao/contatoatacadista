@@ -57,6 +57,7 @@ describe('importarClientes / listDocumentosClientes', () => {
 
   it('importa uma linha nova e pula uma linha com documento já existente, sem alterar o cadastro existente', async () => {
     const original = await createCliente({ ...CLIENTE_BASE, nome: 'Nome Original' })
+    if (!original.sucesso) throw new Error('esperava sucesso')
 
     const linhas: LinhaParaImportar<ClienteInput>[] = [
       { numero: 1, valores: { ...CLIENTE_BASE, tipo: 'pj', documento: DOCUMENTO_NOVO, nome: 'Cliente Novo' } },
@@ -71,7 +72,7 @@ describe('importarClientes / listDocumentosClientes', () => {
     ])
 
     const supabase = createAdminClient()
-    const { data: existente } = await supabase.from('clientes').select('nome').eq('id', original.id).single()
+    const { data: existente } = await supabase.from('clientes').select('nome').eq('id', original.dados.id).single()
     expect(existente?.nome).toBe('Nome Original')
   })
 

@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertModuleAccess } from '@/lib/auth/assert-module-access'
 import type { Custo, CustoInput, Pagamento, PagamentoInput } from '@/lib/types/database'
+import type { ResultadoAcao } from '@/lib/types/acao'
 
 const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/
 const NAO_ENCONTRADO = 'Lançamento não encontrado.'
@@ -54,9 +55,14 @@ export async function listCustos(cargaId: string): Promise<Custo[]> {
   return (data ?? []) as Custo[]
 }
 
-export async function createCusto(cargaId: string, input: CustoInput): Promise<Custo> {
+export async function createCusto(cargaId: string, input: CustoInput): Promise<ResultadoAcao<Custo>> {
   await assertModuleAccess('cargas')
-  const dados = validarCusto(input)
+  let dados: CustoInput
+  try {
+    dados = validarCusto(input)
+  } catch (err) {
+    return { sucesso: false, erro: err instanceof Error ? err.message : 'Dados inválidos.' }
+  }
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('custos_carga')
@@ -71,15 +77,20 @@ export async function createCusto(cargaId: string, input: CustoInput): Promise<C
     .single()
 
   if (error) {
-    if (error.code === '23503') throw new Error('Carga não encontrada.')
-    throw new Error(error.message)
+    if (error.code === '23503') return { sucesso: false, erro: 'Carga não encontrada.' }
+    return { sucesso: false, erro: error.message }
   }
-  return data as Custo
+  return { sucesso: true, dados: data as Custo }
 }
 
-export async function updateCusto(id: string, input: CustoInput): Promise<Custo> {
+export async function updateCusto(id: string, input: CustoInput): Promise<ResultadoAcao<Custo>> {
   await assertModuleAccess('cargas')
-  const dados = validarCusto(input)
+  let dados: CustoInput
+  try {
+    dados = validarCusto(input)
+  } catch (err) {
+    return { sucesso: false, erro: err instanceof Error ? err.message : 'Dados inválidos.' }
+  }
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('custos_carga')
@@ -94,18 +105,19 @@ export async function updateCusto(id: string, input: CustoInput): Promise<Custo>
     .single()
 
   if (error) {
-    if (error.code === 'PGRST116') throw new Error(NAO_ENCONTRADO)
-    throw new Error(error.message)
+    if (error.code === 'PGRST116') return { sucesso: false, erro: NAO_ENCONTRADO }
+    return { sucesso: false, erro: error.message }
   }
-  return data as Custo
+  return { sucesso: true, dados: data as Custo }
 }
 
-export async function deleteCusto(id: string): Promise<void> {
+export async function deleteCusto(id: string): Promise<ResultadoAcao<void>> {
   await assertModuleAccess('cargas')
   const supabase = createAdminClient()
   const { data, error } = await supabase.from('custos_carga').delete().eq('id', id).select('id')
-  if (error) throw new Error(error.message)
-  if (!data || data.length === 0) throw new Error(NAO_ENCONTRADO)
+  if (error) return { sucesso: false, erro: error.message }
+  if (!data || data.length === 0) return { sucesso: false, erro: NAO_ENCONTRADO }
+  return { sucesso: true, dados: undefined }
 }
 
 export async function listPagamentos(cargaId: string): Promise<Pagamento[]> {
@@ -121,9 +133,14 @@ export async function listPagamentos(cargaId: string): Promise<Pagamento[]> {
   return (data ?? []) as Pagamento[]
 }
 
-export async function createPagamento(cargaId: string, input: PagamentoInput): Promise<Pagamento> {
+export async function createPagamento(cargaId: string, input: PagamentoInput): Promise<ResultadoAcao<Pagamento>> {
   await assertModuleAccess('cargas')
-  const dados = validarPagamento(input)
+  let dados: PagamentoInput
+  try {
+    dados = validarPagamento(input)
+  } catch (err) {
+    return { sucesso: false, erro: err instanceof Error ? err.message : 'Dados inválidos.' }
+  }
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('pagamentos_carga')
@@ -137,15 +154,20 @@ export async function createPagamento(cargaId: string, input: PagamentoInput): P
     .single()
 
   if (error) {
-    if (error.code === '23503') throw new Error('Carga não encontrada.')
-    throw new Error(error.message)
+    if (error.code === '23503') return { sucesso: false, erro: 'Carga não encontrada.' }
+    return { sucesso: false, erro: error.message }
   }
-  return data as Pagamento
+  return { sucesso: true, dados: data as Pagamento }
 }
 
-export async function updatePagamento(id: string, input: PagamentoInput): Promise<Pagamento> {
+export async function updatePagamento(id: string, input: PagamentoInput): Promise<ResultadoAcao<Pagamento>> {
   await assertModuleAccess('cargas')
-  const dados = validarPagamento(input)
+  let dados: PagamentoInput
+  try {
+    dados = validarPagamento(input)
+  } catch (err) {
+    return { sucesso: false, erro: err instanceof Error ? err.message : 'Dados inválidos.' }
+  }
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('pagamentos_carga')
@@ -159,16 +181,17 @@ export async function updatePagamento(id: string, input: PagamentoInput): Promis
     .single()
 
   if (error) {
-    if (error.code === 'PGRST116') throw new Error(NAO_ENCONTRADO)
-    throw new Error(error.message)
+    if (error.code === 'PGRST116') return { sucesso: false, erro: NAO_ENCONTRADO }
+    return { sucesso: false, erro: error.message }
   }
-  return data as Pagamento
+  return { sucesso: true, dados: data as Pagamento }
 }
 
-export async function deletePagamento(id: string): Promise<void> {
+export async function deletePagamento(id: string): Promise<ResultadoAcao<void>> {
   await assertModuleAccess('cargas')
   const supabase = createAdminClient()
   const { data, error } = await supabase.from('pagamentos_carga').delete().eq('id', id).select('id')
-  if (error) throw new Error(error.message)
-  if (!data || data.length === 0) throw new Error(NAO_ENCONTRADO)
+  if (error) return { sucesso: false, erro: error.message }
+  if (!data || data.length === 0) return { sucesso: false, erro: NAO_ENCONTRADO }
+  return { sucesso: true, dados: undefined }
 }

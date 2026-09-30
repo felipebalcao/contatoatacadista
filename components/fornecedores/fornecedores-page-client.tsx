@@ -31,13 +31,15 @@ export function FornecedoresPageClient({ fornecedoresIniciais }: { fornecedoresI
   function handleToggleAtivo(id: string, ativo: boolean) {
     setError(null)
     startTransition(async () => {
-      try {
-        await toggleFornecedorAtivo(id, ativo)
-        const resultado = await listFornecedores(busca || undefined)
-        setFornecedores(resultado)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao atualizar fornecedor.')
+      const resultado = await toggleFornecedorAtivo(id, ativo)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+
+      const fornecedoresAtualizados = await listFornecedores(busca || undefined)
+      setFornecedores(fornecedoresAtualizados)
     })
   }
 

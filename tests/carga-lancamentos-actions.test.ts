@@ -32,13 +32,14 @@ let fornecedorId: string
 let produtoId: string
 
 async function criarCargaDeTeste(nome: string) {
-  const { id } = await createCarga({
+  const resultado = await createCarga({
     fornecedor_id: fornecedorId,
     nome,
     data: '2026-09-20',
     itens: [{ produto_id: produtoId, quantidade: 4, valor_unitario: 2.5 }],
   })
-  return id
+  if (!resultado.sucesso) throw new Error(resultado.erro)
+  return resultado.dados.id
 }
 
 describe('carga-lancamentos-actions', () => {
@@ -80,45 +81,50 @@ describe('carga-lancamentos-actions', () => {
   it('cria e lista um custo, aparando a categoria e guardando descrição vazia como null', async () => {
     const cargaId = await criarCargaDeTeste('Carga Custo')
 
-    const custo = await createCusto(cargaId, {
+    const resultado = await createCusto(cargaId, {
       categoria: '  Transporte  ',
       descricao: '   ',
       valor: 150.5,
       data: '2026-09-20',
     })
 
-    expect(custo.categoria).toBe('Transporte')
-    expect(custo.descricao).toBeNull()
-    expect(custo.valor).toBe(150.5)
+    if (!resultado.sucesso) throw new Error('esperava sucesso')
+    expect(resultado.dados.categoria).toBe('Transporte')
+    expect(resultado.dados.descricao).toBeNull()
+    expect(resultado.dados.valor).toBe(150.5)
 
     const custos = await listCustos(cargaId)
     expect(custos).toHaveLength(1)
-    expect(custos[0].id).toBe(custo.id)
+    expect(custos[0].id).toBe(resultado.dados.id)
   })
 
   it('atualiza um custo', async () => {
     const cargaId = await criarCargaDeTeste('Carga Custo Update')
-    const custo = await createCusto(cargaId, { categoria: 'Descarga', descricao: null, valor: 50, data: '2026-09-20' })
+    const criado = await createCusto(cargaId, { categoria: 'Descarga', descricao: null, valor: 50, data: '2026-09-20' })
+    if (!criado.sucesso) throw new Error('esperava sucesso')
 
-    const atualizado = await updateCusto(custo.id, {
+    const resultado = await updateCusto(criado.dados.id, {
       categoria: 'Comissão',
       descricao: 'Vendedor João',
       valor: 75,
       data: '2026-09-21',
     })
 
-    expect(atualizado.categoria).toBe('Comissão')
-    expect(atualizado.descricao).toBe('Vendedor João')
-    expect(atualizado.valor).toBe(75)
-    expect(atualizado.data).toBe('2026-09-21')
+    if (!resultado.sucesso) throw new Error('esperava sucesso')
+    expect(resultado.dados.categoria).toBe('Comissão')
+    expect(resultado.dados.descricao).toBe('Vendedor João')
+    expect(resultado.dados.valor).toBe(75)
+    expect(resultado.dados.data).toBe('2026-09-21')
   })
 
   it('exclui um custo', async () => {
     const cargaId = await criarCargaDeTeste('Carga Custo Delete')
-    const custo = await createCusto(cargaId, { categoria: 'Descarga', descricao: null, valor: 50, data: '2026-09-20' })
+    const criado = await createCusto(cargaId, { categoria: 'Descarga', descricao: null, valor: 50, data: '2026-09-20' })
+    if (!criado.sucesso) throw new Error('esperava sucesso')
 
-    await deleteCusto(custo.id)
+    const resultado = await deleteCusto(criado.dados.id)
 
+    expect(resultado.sucesso).toBe(true)
     expect(await listCustos(cargaId)).toHaveLength(0)
   })
 
@@ -126,49 +132,63 @@ describe('carga-lancamentos-actions', () => {
     const cargaId = await criarCargaDeTeste('Carga Custo Valor')
     const base = { categoria: 'Transporte', descricao: null, data: '2026-09-20' }
 
-    await expect(createCusto(cargaId, { ...base, valor: 0 })).rejects.toThrow('Informe um valor maior que zero.')
-    await expect(createCusto(cargaId, { ...base, valor: -5 })).rejects.toThrow('Informe um valor maior que zero.')
-    await expect(createCusto(cargaId, { ...base, valor: Number.NaN })).rejects.toThrow('Informe um valor maior que zero.')
+    const r1 = await createCusto(cargaId, { ...base, valor: 0 })
+    expect(r1.sucesso).toBe(false)
+    if (!r1.sucesso) expect(r1.erro).toBe('Informe um valor maior que zero.')
+
+    const r2 = await createCusto(cargaId, { ...base, valor: -5 })
+    expect(r2.sucesso).toBe(false)
+    if (!r2.sucesso) expect(r2.erro).toBe('Informe um valor maior que zero.')
+
+    const r3 = await createCusto(cargaId, { ...base, valor: Number.NaN })
+    expect(r3.sucesso).toBe(false)
+    if (!r3.sucesso) expect(r3.erro).toBe('Informe um valor maior que zero.')
   })
 
   it('rejeita custo com categoria vazia ou data inválida', async () => {
     const cargaId = await criarCargaDeTeste('Carga Custo Validacao')
 
-    await expect(
-      createCusto(cargaId, { categoria: '   ', descricao: null, valor: 10, data: '2026-09-20' })
-    ).rejects.toThrow('Informe a categoria.')
-    await expect(
-      createCusto(cargaId, { categoria: 'Transporte', descricao: null, valor: 10, data: '2026-02-31' })
-    ).rejects.toThrow('Informe uma data válida.')
-    await expect(
-      createCusto(cargaId, { categoria: 'Transporte', descricao: null, valor: 10, data: '20/09/2026' })
-    ).rejects.toThrow('Informe uma data válida.')
+    const r1 = await createCusto(cargaId, { categoria: '   ', descricao: null, valor: 10, data: '2026-09-20' })
+    expect(r1.sucesso).toBe(false)
+    if (!r1.sucesso) expect(r1.erro).toBe('Informe a categoria.')
+
+    const r2 = await createCusto(cargaId, { categoria: 'Transporte', descricao: null, valor: 10, data: '2026-02-31' })
+    expect(r2.sucesso).toBe(false)
+    if (!r2.sucesso) expect(r2.erro).toBe('Informe uma data válida.')
+
+    const r3 = await createCusto(cargaId, { categoria: 'Transporte', descricao: null, valor: 10, data: '20/09/2026' })
+    expect(r3.sucesso).toBe(false)
+    if (!r3.sucesso) expect(r3.erro).toBe('Informe uma data válida.')
   })
 
   it('cria, lista, atualiza e exclui um pagamento', async () => {
     const cargaId = await criarCargaDeTeste('Carga Pagamento')
 
-    const pagamento = await createPagamento(cargaId, { valor: 3, data: '2026-09-20', observacao: '  Pix  ' })
-    expect(pagamento.observacao).toBe('Pix')
+    const criado = await createPagamento(cargaId, { valor: 3, data: '2026-09-20', observacao: '  Pix  ' })
+    if (!criado.sucesso) throw new Error('esperava sucesso')
+    expect(criado.dados.observacao).toBe('Pix')
 
-    const atualizado = await updatePagamento(pagamento.id, { valor: 4, data: '2026-09-21', observacao: null })
-    expect(atualizado.valor).toBe(4)
-    expect(atualizado.observacao).toBeNull()
+    const atualizado = await updatePagamento(criado.dados.id, { valor: 4, data: '2026-09-21', observacao: null })
+    if (!atualizado.sucesso) throw new Error('esperava sucesso')
+    expect(atualizado.dados.valor).toBe(4)
+    expect(atualizado.dados.observacao).toBeNull()
     expect(await listPagamentos(cargaId)).toHaveLength(1)
 
-    await deletePagamento(pagamento.id)
+    const excluido = await deletePagamento(criado.dados.id)
+    expect(excluido.sucesso).toBe(true)
     expect(await listPagamentos(cargaId)).toHaveLength(0)
   })
 
   it('rejeita pagamento com valor ou data inválidos', async () => {
     const cargaId = await criarCargaDeTeste('Carga Pagamento Validacao')
 
-    await expect(
-      createPagamento(cargaId, { valor: 0, data: '2026-09-20', observacao: null })
-    ).rejects.toThrow('Informe um valor maior que zero.')
-    await expect(
-      createPagamento(cargaId, { valor: 10, data: 'ontem', observacao: null })
-    ).rejects.toThrow('Informe uma data válida.')
+    const r1 = await createPagamento(cargaId, { valor: 0, data: '2026-09-20', observacao: null })
+    expect(r1.sucesso).toBe(false)
+    if (!r1.sucesso) expect(r1.erro).toBe('Informe um valor maior que zero.')
+
+    const r2 = await createPagamento(cargaId, { valor: 10, data: 'ontem', observacao: null })
+    expect(r2.sucesso).toBe(false)
+    if (!r2.sucesso) expect(r2.erro).toBe('Informe uma data válida.')
   })
 
   it('listCargas devolve pago e falta calculados', async () => {
@@ -193,17 +213,25 @@ describe('carga-lancamentos-actions', () => {
   })
 
   it('devolve erro amigável para carga ou lançamento inexistente', async () => {
-    await expect(
-      createCusto(ID_INEXISTENTE, { categoria: 'Transporte', descricao: null, valor: 10, data: '2026-09-20' })
-    ).rejects.toThrow('Carga não encontrada.')
-    await expect(
-      createPagamento(ID_INEXISTENTE, { valor: 10, data: '2026-09-20', observacao: null })
-    ).rejects.toThrow('Carga não encontrada.')
-    await expect(
-      updateCusto(ID_INEXISTENTE, { categoria: 'Transporte', descricao: null, valor: 10, data: '2026-09-20' })
-    ).rejects.toThrow('Lançamento não encontrado.')
-    await expect(deleteCusto(ID_INEXISTENTE)).rejects.toThrow('Lançamento não encontrado.')
-    await expect(deletePagamento(ID_INEXISTENTE)).rejects.toThrow('Lançamento não encontrado.')
+    const r1 = await createCusto(ID_INEXISTENTE, { categoria: 'Transporte', descricao: null, valor: 10, data: '2026-09-20' })
+    expect(r1.sucesso).toBe(false)
+    if (!r1.sucesso) expect(r1.erro).toBe('Carga não encontrada.')
+
+    const r2 = await createPagamento(ID_INEXISTENTE, { valor: 10, data: '2026-09-20', observacao: null })
+    expect(r2.sucesso).toBe(false)
+    if (!r2.sucesso) expect(r2.erro).toBe('Carga não encontrada.')
+
+    const r3 = await updateCusto(ID_INEXISTENTE, { categoria: 'Transporte', descricao: null, valor: 10, data: '2026-09-20' })
+    expect(r3.sucesso).toBe(false)
+    if (!r3.sucesso) expect(r3.erro).toBe('Lançamento não encontrado.')
+
+    const r4 = await deleteCusto(ID_INEXISTENTE)
+    expect(r4.sucesso).toBe(false)
+    if (!r4.sucesso) expect(r4.erro).toBe('Lançamento não encontrado.')
+
+    const r5 = await deletePagamento(ID_INEXISTENTE)
+    expect(r5.sucesso).toBe(false)
+    if (!r5.sucesso) expect(r5.erro).toBe('Lançamento não encontrado.')
   })
 
   it('rejeita chamadas de um usuário sem permissão de cargas', async () => {

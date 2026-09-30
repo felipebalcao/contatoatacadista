@@ -83,17 +83,26 @@ describe('carga-actions', () => {
       ],
     }
 
-    const { id } = await createCarga(input)
-    const carga = await getCarga(id)
+    const resultado = await createCarga(input)
+    if (!resultado.sucesso) throw new Error(resultado.erro)
+    const carga = await getCarga(resultado.dados.id)
 
     expect(carga?.nome).toBe('Carga Teste')
     expect(carga?.itens).toHaveLength(2)
   })
 
   it('rejeita salvar carga sem nenhum item', async () => {
-    await expect(
-      createCarga({ fornecedor_id: fornecedorId, nome: 'Carga Vazia', data: '2026-09-04', itens: [] })
-    ).rejects.toThrow('A carga precisa ter pelo menos um produto.')
+    const resultado = await createCarga({
+      fornecedor_id: fornecedorId,
+      nome: 'Carga Vazia',
+      data: '2026-09-04',
+      itens: [],
+    })
+
+    expect(resultado.sucesso).toBe(false)
+    if (!resultado.sucesso) {
+      expect(resultado.erro).toBe('A carga precisa ter pelo menos um produto.')
+    }
   })
 
   it('não deixa carga órfã se a inserção dos itens falhar', async () => {
@@ -107,26 +116,33 @@ describe('carga-actions', () => {
       ],
     }
 
-    await expect(createCarga(input)).rejects.toThrow('Não é possível adicionar o mesmo produto duas vezes na carga.')
+    const resultado = await createCarga(input)
+    expect(resultado.sucesso).toBe(false)
+    if (!resultado.sucesso) {
+      expect(resultado.erro).toBe('Não é possível adicionar o mesmo produto duas vezes na carga.')
+    }
 
     const cargas = await listCargas('Carga Com Item Inválido')
     expect(cargas).toHaveLength(0)
   })
 
   it('atualiza uma carga substituindo a lista de itens', async () => {
-    const { id } = await createCarga({
+    const criado = await createCarga({
       fornecedor_id: fornecedorId,
       nome: 'Carga Original',
       data: '2026-09-04',
       itens: [{ produto_id: produtoAId, quantidade: 5, valor_unitario: 1 }],
     })
+    if (!criado.sucesso) throw new Error(criado.erro)
+    const id = criado.dados.id
 
-    await updateCarga(id, {
+    const atualizado = await updateCarga(id, {
       fornecedor_id: fornecedorId,
       nome: 'Carga Atualizada',
       data: '2026-09-05',
       itens: [{ produto_id: produtoBId, quantidade: 7, valor_unitario: 2 }],
     })
+    expect(atualizado.sucesso).toBe(true)
 
     const carga = await getCarga(id)
     expect(carga?.nome).toBe('Carga Atualizada')
@@ -135,12 +151,13 @@ describe('carga-actions', () => {
   })
 
   it('lista cargas com o total calculado', async () => {
-    await createCarga({
+    const criado = await createCarga({
       fornecedor_id: fornecedorId,
       nome: 'Carga Para Total',
       data: '2026-09-04',
       itens: [{ produto_id: produtoAId, quantidade: 4, valor_unitario: 2.5 }],
     })
+    if (!criado.sucesso) throw new Error(criado.erro)
 
     const cargas = await listCargas('Carga Para Total')
     expect(cargas).toHaveLength(1)
@@ -148,24 +165,27 @@ describe('carga-actions', () => {
   })
 
   it('busca cargas pelo nome do fornecedor', async () => {
-    await createCarga({
+    const criado = await createCarga({
       fornecedor_id: fornecedorId,
       nome: 'Carga Qualquer',
       data: '2026-09-04',
       itens: [{ produto_id: produtoAId, quantidade: 1, valor_unitario: 1 }],
     })
+    if (!criado.sucesso) throw new Error(criado.erro)
 
     const resultados = await listCargas('Fornecedor Teste Carga')
     expect(resultados.some((c) => c.nome === 'Carga Qualquer')).toBe(true)
   })
 
   it('inativa e reativa uma carga', async () => {
-    const { id } = await createCarga({
+    const criado = await createCarga({
       fornecedor_id: fornecedorId,
       nome: 'Carga Toggle',
       data: '2026-09-04',
       itens: [{ produto_id: produtoAId, quantidade: 1, valor_unitario: 1 }],
     })
+    if (!criado.sucesso) throw new Error(criado.erro)
+    const id = criado.dados.id
 
     await toggleCargaAtivo(id, false)
     let carga = await getCarga(id)

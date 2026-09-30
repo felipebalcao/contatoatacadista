@@ -43,17 +43,17 @@ export function ProdutoForm({
     }
 
     startTransition(async () => {
-      try {
-        if (isEditing && produto) {
-          await updateProduto(produto.id, input)
-        } else {
-          await createProduto(input)
-        }
-        router.push('/produtos')
-        router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao salvar produto.')
+      const resultado = isEditing && produto
+        ? await updateProduto(produto.id, input)
+        : await createProduto(input)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+
+      router.push('/produtos')
+      router.refresh()
     })
   }
 

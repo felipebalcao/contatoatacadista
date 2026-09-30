@@ -37,12 +37,12 @@ export function PagamentosSecao({
     if (!window.confirm(`Excluir o pagamento de ${formatarMoeda(pagamento.valor)} em ${formatarData(pagamento.data)}?`)) return
     setError(null)
     startTransition(async () => {
-      try {
-        await deletePagamento(pagamento.id)
-        router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao excluir o pagamento.')
+      const resultado = await deletePagamento(pagamento.id)
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+      router.refresh()
     })
   }
 

@@ -48,7 +48,8 @@ describe('importarFornecedores / listDocumentosFornecedores', () => {
   })
 
   it('lista os documentos já cadastrados', async () => {
-    await createFornecedor(FORNECEDOR_BASE)
+    const criado = await createFornecedor(FORNECEDOR_BASE)
+    if (!criado.sucesso) throw new Error('esperado sucesso')
 
     const documentos = await listDocumentosFornecedores()
 
@@ -57,6 +58,7 @@ describe('importarFornecedores / listDocumentosFornecedores', () => {
 
   it('importa uma linha nova e pula uma linha com documento já existente, sem alterar o cadastro existente', async () => {
     const original = await createFornecedor({ ...FORNECEDOR_BASE, nome: 'Nome Original' })
+    if (!original.sucesso) throw new Error('esperado sucesso')
 
     const linhas: LinhaParaImportar<FornecedorInput>[] = [
       { numero: 1, valores: { ...FORNECEDOR_BASE, tipo: 'pj', documento: DOCUMENTO_NOVO, nome: 'Fornecedor Novo' } },
@@ -71,7 +73,7 @@ describe('importarFornecedores / listDocumentosFornecedores', () => {
     ])
 
     const supabase = createAdminClient()
-    const { data: existente } = await supabase.from('fornecedores').select('nome').eq('id', original.id).single()
+    const { data: existente } = await supabase.from('fornecedores').select('nome').eq('id', original.dados.id).single()
     expect(existente?.nome).toBe('Nome Original')
   })
 

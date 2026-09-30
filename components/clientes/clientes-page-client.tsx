@@ -31,10 +31,16 @@ export function ClientesPageClient({ clientesIniciais }: { clientesIniciais: Cli
   function handleToggleAtivo(id: string, ativo: boolean) {
     setError(null)
     startTransition(async () => {
+      const resultado = await toggleClienteAtivo(id, ativo)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
+      }
+
       try {
-        await toggleClienteAtivo(id, ativo)
-        const resultado = await listClientes(busca || undefined)
-        setClientes(resultado)
+        const lista = await listClientes(busca || undefined)
+        setClientes(lista)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro ao atualizar cliente.')
       }

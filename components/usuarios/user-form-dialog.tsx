@@ -16,17 +16,17 @@ export function UserFormDialog({ roles, onCreated }: { roles: Role[]; onCreated:
   function handleSubmit(formData: FormData) {
     setError(null)
     startTransition(async () => {
-      try {
-        await createUser(
-          formData.get('nome') as string,
-          formData.get('email') as string,
-          formData.get('roleId') as string
-        )
-        setOpen(false)
-        onCreated()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao criar usuário.')
+      const resultado = await createUser(
+        formData.get('nome') as string,
+        formData.get('email') as string,
+        formData.get('roleId') as string
+      )
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+      setOpen(false)
+      onCreated()
     })
   }
 

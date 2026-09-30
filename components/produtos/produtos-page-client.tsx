@@ -31,10 +31,16 @@ export function ProdutosPageClient({ produtosIniciais }: { produtosIniciais: Pro
   function handleToggleAtivo(id: string, ativo: boolean) {
     setError(null)
     startTransition(async () => {
+      const resultado = await toggleProdutoAtivo(id, ativo)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
+      }
+
       try {
-        await toggleProdutoAtivo(id, ativo)
-        const resultado = await listProdutos(busca || undefined)
-        setProdutos(resultado)
+        const lista = await listProdutos(busca || undefined)
+        setProdutos(lista)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro ao atualizar produto.')
       }

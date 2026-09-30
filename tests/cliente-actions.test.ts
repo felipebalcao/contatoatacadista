@@ -51,32 +51,37 @@ describe('cliente-actions', () => {
   })
 
   it('cria um cliente PF válido', async () => {
-    const cliente = await createCliente(inputBase)
+    const resultado = await createCliente(inputBase)
 
-    expect(cliente.documento).toBe(DOCUMENTO_TESTE)
-    expect(cliente.ativo).toBe(true)
+    expect(resultado.sucesso).toBe(true)
+    if (!resultado.sucesso) throw new Error('esperava sucesso')
+    expect(resultado.dados.documento).toBe(DOCUMENTO_TESTE)
+    expect(resultado.dados.ativo).toBe(true)
   })
 
   it('rejeita documento com dígito verificador inválido', async () => {
-    await expect(
-      createCliente({ ...inputBase, documento: '111.444.777-36' })
-    ).rejects.toThrow('Documento inválido.')
+    const resultado = await createCliente({ ...inputBase, documento: '111.444.777-36' })
+
+    expect(resultado).toEqual({ sucesso: false, erro: 'Documento inválido.' })
   })
 
   it('rejeita documento duplicado', async () => {
     await createCliente({ ...inputBase, nome: 'Primeiro Cadastro' })
 
-    await expect(
-      createCliente({ ...inputBase, nome: 'Segundo Cadastro' })
-    ).rejects.toThrow('Já existe um cliente cadastrado com esse documento.')
+    const resultado = await createCliente({ ...inputBase, nome: 'Segundo Cadastro' })
+
+    expect(resultado).toEqual({ sucesso: false, erro: 'Já existe um cliente cadastrado com esse documento.' })
   })
 
   it('atualiza um cliente existente', async () => {
-    const cliente = await createCliente({ ...inputBase, nome: 'Nome Original' })
+    const criado = await createCliente({ ...inputBase, nome: 'Nome Original' })
+    if (!criado.sucesso) throw new Error('esperava sucesso')
 
-    const atualizado = await updateCliente(cliente.id, { ...inputBase, nome: 'Nome Atualizado' })
+    const atualizado = await updateCliente(criado.dados.id, { ...inputBase, nome: 'Nome Atualizado' })
 
-    expect(atualizado.nome).toBe('Nome Atualizado')
+    expect(atualizado.sucesso).toBe(true)
+    if (!atualizado.sucesso) throw new Error('esperava sucesso')
+    expect(atualizado.dados.nome).toBe('Nome Atualizado')
   })
 
   it('lista clientes filtrando por nome, excluindo os que não combinam', async () => {
@@ -98,7 +103,9 @@ describe('cliente-actions', () => {
   })
 
   it('inativa e reativa um cliente', async () => {
-    const cliente = await createCliente(inputBase)
+    const criado = await createCliente(inputBase)
+    if (!criado.sucesso) throw new Error('esperava sucesso')
+    const cliente = criado.dados
 
     await toggleClienteAtivo(cliente.id, false)
     let lista = await listClientes()

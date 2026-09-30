@@ -5,6 +5,7 @@ import { assertModuleAccess } from '@/lib/auth/assert-module-access'
 import { calcularProximoCodigo } from '@/lib/produtos/proximo-codigo'
 import type { Produto, ProdutoInput } from '@/lib/types/database'
 import type { LinhaParaImportar, ResultadoImportacao } from '@/lib/importacao/tipos'
+import type { ResultadoAcao } from '@/lib/types/acao'
 
 const TAMANHO_PAGINA = 1000
 
@@ -55,7 +56,7 @@ export async function getProduto(id: string): Promise<Produto | null> {
   return (data as Produto) ?? null
 }
 
-export async function createProduto(input: ProdutoInput): Promise<Produto> {
+export async function createProduto(input: ProdutoInput): Promise<ResultadoAcao<Produto>> {
   await assertModuleAccess('produtos')
   const supabase = createAdminClient()
   const { data, error } = await supabase
@@ -83,15 +84,15 @@ export async function createProduto(input: ProdutoInput): Promise<Produto> {
 
   if (error) {
     if (error.code === '23505') {
-      throw new Error('Já existe um produto cadastrado com esse código.')
+      return { sucesso: false, erro: 'Já existe um produto cadastrado com esse código.' }
     }
-    throw new Error(error.message)
+    return { sucesso: false, erro: error.message }
   }
 
-  return data as Produto
+  return { sucesso: true, dados: data as Produto }
 }
 
-export async function updateProduto(id: string, input: ProdutoInput): Promise<Produto> {
+export async function updateProduto(id: string, input: ProdutoInput): Promise<ResultadoAcao<Produto>> {
   await assertModuleAccess('produtos')
   const supabase = createAdminClient()
   const { data, error } = await supabase
@@ -120,19 +121,20 @@ export async function updateProduto(id: string, input: ProdutoInput): Promise<Pr
 
   if (error) {
     if (error.code === '23505') {
-      throw new Error('Já existe um produto cadastrado com esse código.')
+      return { sucesso: false, erro: 'Já existe um produto cadastrado com esse código.' }
     }
-    throw new Error(error.message)
+    return { sucesso: false, erro: error.message }
   }
 
-  return data as Produto
+  return { sucesso: true, dados: data as Produto }
 }
 
-export async function toggleProdutoAtivo(id: string, ativo: boolean): Promise<void> {
+export async function toggleProdutoAtivo(id: string, ativo: boolean): Promise<ResultadoAcao> {
   await assertModuleAccess('produtos')
   const supabase = createAdminClient()
   const { error } = await supabase.from('produtos').update({ ativo }).eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { sucesso: false, erro: error.message }
+  return { sucesso: true, dados: undefined }
 }
 
 export async function listCodigosProdutos(): Promise<string[]> {
@@ -170,8 +172,12 @@ export async function importarProdutos(
     }
 
     try {
-      await createProduto(valores)
-      criados++
+      const resultado = await createProduto(valores)
+      if (resultado.sucesso) {
+        criados++
+      } else {
+        pulados.push({ linha: linha.numero, motivo: resultado.erro })
+      }
     } catch (err) {
       pulados.push({ linha: linha.numero, motivo: err instanceof Error ? err.message : 'Erro desconhecido.' })
     }

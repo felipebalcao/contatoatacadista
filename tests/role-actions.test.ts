@@ -24,40 +24,46 @@ describe('role-actions (camada de dados, via admin client)', () => {
   })
 
   it('cria um papel personalizado com permissões', async () => {
-    const role = await createRole('Vendedor Teste', ['clientes', 'produtos'])
-    expect(role.nome).toBe('Vendedor Teste')
-    expect(role.is_system).toBe(false)
+    const resultado = await createRole('Vendedor Teste', ['clientes', 'produtos'])
+    expect(resultado.sucesso).toBe(true)
+    if (!resultado.sucesso) throw new Error('esperava sucesso')
+    expect(resultado.dados.nome).toBe('Vendedor Teste')
+    expect(resultado.dados.is_system).toBe(false)
 
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('role_permissions')
       .select('module_key')
-      .eq('role_id', role.id)
+      .eq('role_id', resultado.dados.id)
       .order('module_key')
 
     expect(data).toEqual([{ module_key: 'clientes' }, { module_key: 'produtos' }])
   })
 
   it('atualiza as permissões de um papel existente', async () => {
-    const role = await createRole('Vendedor Teste', ['clientes'])
-    await updateRolePermissions(role.id, ['produtos', 'usuarios'])
+    const criado = await createRole('Vendedor Teste', ['clientes'])
+    if (!criado.sucesso) throw new Error('esperava sucesso')
+    const resultado = await updateRolePermissions(criado.dados.id, ['produtos', 'usuarios'])
+    expect(resultado.sucesso).toBe(true)
 
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('role_permissions')
       .select('module_key')
-      .eq('role_id', role.id)
+      .eq('role_id', criado.dados.id)
       .order('module_key')
 
     expect(data).toEqual([{ module_key: 'produtos' }, { module_key: 'usuarios' }])
   })
 
   it('exclui um papel personalizado sem usuários vinculados', async () => {
-    const role = await createRole('Vendedor Teste', [])
-    await deleteRole(role.id)
+    const criado = await createRole('Vendedor Teste', [])
+    if (!criado.sucesso) throw new Error('esperava sucesso')
+    const resultado = await deleteRole(criado.dados.id)
+    expect(resultado.sucesso).toBe(true)
 
     const supabase = createAdminClient()
-    const { data } = await supabase.from('roles').select('id').eq('id', role.id)
+    const { data } = await supabase.from('roles').select('id').eq('id', criado.dados.id)
     expect(data).toEqual([])
   })
 
@@ -65,7 +71,10 @@ describe('role-actions (camada de dados, via admin client)', () => {
     const supabase = createAdminClient()
     const { data: adminRole } = await supabase.from('roles').select('id').eq('nome', 'Admin').single()
 
-    await expect(deleteRole(adminRole!.id)).rejects.toThrow()
+    const resultado = await deleteRole(adminRole!.id)
+    expect(resultado.sucesso).toBe(false)
+    if (resultado.sucesso) throw new Error('esperava falha')
+    expect(resultado.erro).toBe('Papéis do sistema não podem ser excluídos.')
   })
 
   it('rejeita chamadas de um usuário sem permissão de usuarios', async () => {

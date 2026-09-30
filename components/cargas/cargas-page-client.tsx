@@ -31,13 +31,15 @@ export function CargasPageClient({ cargasIniciais }: { cargasIniciais: CargaResu
   function handleToggleAtivo(id: string, ativo: boolean) {
     setError(null)
     startTransition(async () => {
-      try {
-        await toggleCargaAtivo(id, ativo)
-        const resultado = await listCargas(busca || undefined)
-        setCargas(resultado)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao atualizar carga.')
+      const resultado = await toggleCargaAtivo(id, ativo)
+
+      if (!resultado.sucesso) {
+        setError(resultado.erro)
+        return
       }
+
+      const cargasAtualizadas = await listCargas(busca || undefined)
+      setCargas(cargasAtualizadas)
     })
   }
 

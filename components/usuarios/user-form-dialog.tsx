@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { AlertCircle, Plus } from 'lucide-react'
+import { AlertCircle, Check, Copy, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,6 +11,8 @@ import type { Role } from '@/lib/types/database'
 export function UserFormDialog({ roles, onCreated }: { roles: Role[]; onCreated: () => void }) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [senhaGerada, setSenhaGerada] = useState<string | null>(null)
+  const [copiado, setCopiado] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit(formData: FormData) {
@@ -25,9 +27,21 @@ export function UserFormDialog({ roles, onCreated }: { roles: Role[]; onCreated:
         setError(resultado.erro)
         return
       }
-      setOpen(false)
-      onCreated()
+      setSenhaGerada(resultado.dados.senha)
     })
+  }
+
+  function handleFechar() {
+    setOpen(false)
+    setSenhaGerada(null)
+    setCopiado(false)
+    onCreated()
+  }
+
+  async function handleCopiar() {
+    if (!senhaGerada) return
+    await navigator.clipboard.writeText(senhaGerada)
+    setCopiado(true)
   }
 
   if (!open) {
@@ -36,6 +50,38 @@ export function UserFormDialog({ roles, onCreated }: { roles: Role[]; onCreated:
         <Plus className="size-4" />
         Novo usuário
       </Button>
+    )
+  }
+
+  if (senhaGerada) {
+    return (
+      <div className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 text-left shadow-lg shadow-slate-900/5">
+        <div className="flex flex-col gap-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-600">
+            Usuário criado
+          </p>
+          <h2 className="text-base font-semibold tracking-tight text-slate-900">Senha gerada</h2>
+        </div>
+
+        <p className="text-sm text-slate-600">
+          Anote essa senha e repasse para o usuário — ela não será mostrada novamente.
+        </p>
+
+        <div className="flex items-center gap-2">
+          <code className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-mono text-slate-900">
+            {senhaGerada}
+          </code>
+          <Button type="button" variant="ghost" onClick={handleCopiar} className="h-9 px-3">
+            {copiado ? <Check className="size-4" /> : <Copy className="size-4" />}
+          </Button>
+        </div>
+
+        <div className="flex gap-2 border-t border-slate-100 pt-4">
+          <Button type="button" onClick={handleFechar} className="h-9 px-3">
+            Concluir
+          </Button>
+        </div>
+      </div>
     )
   }
 

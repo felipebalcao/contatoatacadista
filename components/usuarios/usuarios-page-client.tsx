@@ -52,7 +52,7 @@ export function UsuariosPageClient({
 
       <p className="flex items-start gap-2 rounded-lg border border-sky-100 bg-sky-50/60 px-3 py-2.5 text-sm text-slate-600">
         <Info className="mt-0.5 size-4 shrink-0 text-sky-600" />
-        Ao criar um usuário, ele recebe um email com o link para definir a própria senha.
+        Ao criar um usuário, uma senha é gerada automaticamente — copie e repasse para ele.
       </p>
     </div>
   )

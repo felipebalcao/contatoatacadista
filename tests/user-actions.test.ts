@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
+import { createClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createUser, listUsers } from '@/actions/user-actions'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
@@ -39,11 +40,32 @@ describe('user-actions', () => {
 
     expect(resultado.sucesso).toBe(true)
     if (!resultado.sucesso) throw new Error('esperava sucesso')
-    expect(resultado.dados.email).toBe(TEST_EMAIL)
-    expect(resultado.dados.role_id).toBe(financeiro!.id)
+    expect(resultado.dados.profile.email).toBe(TEST_EMAIL)
+    expect(resultado.dados.profile.role_id).toBe(financeiro!.id)
+    expect(resultado.dados.senha).toHaveLength(12)
 
     const { data: authUser } = await supabase.auth.admin.listUsers()
     expect(authUser.users.some((u) => u.email === TEST_EMAIL)).toBe(true)
+  })
+
+  it('a senha gerada já funciona para login imediatamente', async () => {
+    const supabase = createAdminClient()
+    const { data: financeiro } = await supabase.from('roles').select('id').eq('nome', 'Financeiro').single()
+
+    const resultado = await createUser('Vendedor Teste', TEST_EMAIL, financeiro!.id)
+    if (!resultado.sucesso) throw new Error(`esperava sucesso, recebi: ${resultado.erro}`)
+
+    const clienteAnonimo = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data: sessao, error } = await clienteAnonimo.auth.signInWithPassword({
+      email: TEST_EMAIL,
+      password: resultado.dados.senha,
+    })
+
+    expect(error).toBeNull()
+    expect(sessao.user?.email).toBe(TEST_EMAIL)
   })
 
   it('lista usuários com nome do papel', async () => {

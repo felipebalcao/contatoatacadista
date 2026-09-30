@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertModuleAccess } from '@/lib/auth/assert-module-access'
+import { gerarSenha } from '@/lib/auth/gerar-senha'
 import type { Profile, Role } from '@/lib/types/database'
 import type { ResultadoAcao } from '@/lib/types/acao'
 
@@ -17,11 +18,20 @@ export async function listUsers(): Promise<(Profile & { role: Role })[]> {
   return (data ?? []) as (Profile & { role: Role })[]
 }
 
-export async function createUser(nome: string, email: string, roleId: string): Promise<ResultadoAcao<Profile>> {
+export async function createUser(
+  nome: string,
+  email: string,
+  roleId: string
+): Promise<ResultadoAcao<{ profile: Profile; senha: string }>> {
   await assertModuleAccess('usuarios')
   const supabase = createAdminClient()
+  const senha = gerarSenha()
 
-  const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(email)
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    password: senha,
+    email_confirm: true,
+  })
   if (authError) return { sucesso: false, erro: authError.message }
 
   const { data: profile, error: profileError } = await supabase
@@ -31,5 +41,5 @@ export async function createUser(nome: string, email: string, roleId: string): P
     .single()
 
   if (profileError) return { sucesso: false, erro: profileError.message }
-  return { sucesso: true, dados: profile }
+  return { sucesso: true, dados: { profile, senha } }
 }

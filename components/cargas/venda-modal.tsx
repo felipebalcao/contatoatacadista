@@ -51,6 +51,10 @@ export function VendaModal({
   dataPadrao: string
 }) {
   const router = useRouter()
+  const clientesParaSelecao =
+    venda && !clientes.some((c) => c.id === venda.cliente_id)
+      ? [{ id: venda.cliente_id, nome: venda.cliente_nome }, ...clientes]
+      : clientes
   const [clienteId, setClienteId] = useState('')
   const [data, setData] = useState('')
   const [notasFiscais, setNotasFiscais] = useState<string[]>([])
@@ -212,7 +216,7 @@ export function VendaModal({
                 className="h-9 rounded-md border border-slate-200 px-3 text-sm"
               >
                 <option value="">Selecione...</option>
-                {clientes.map((c) => (
+                {clientesParaSelecao.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nome}
                   </option>

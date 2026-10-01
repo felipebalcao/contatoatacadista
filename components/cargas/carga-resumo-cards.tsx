@@ -23,7 +23,7 @@ export function CargaResumoCards({ resumo }: { resumo: ResumoCarga }) {
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
       {cartoes.map((cartao) => (
         <div
           key={cartao.rotulo}

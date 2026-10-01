@@ -229,6 +229,72 @@ describe('funções de banco de vendas e estoque', () => {
     expect(await estoqueAtual(produtoId)).toBe(10)
   })
 
+  it('atualizar venda com estoque insuficiente não altera o estoque (rollback completo)', async () => {
+    const produtoId = await criarProdutoTeste()
+    const supabase = createAdminClient()
+    const { data: cargaId } = await supabase.rpc('criar_carga_com_itens', {
+      p_fornecedor_id: fornecedorId,
+      p_nome: 'Carga Teste',
+      p_data: '2026-09-20',
+      p_itens: [{ produto_id: produtoId, quantidade: 10, valor_unitario: 5 }],
+    })
+    const { data: vendaId } = await supabase.rpc('criar_venda_com_itens', {
+      p_carga_id: cargaId,
+      p_cliente_id: clienteId,
+      p_data: '2026-09-21',
+      p_notas_fiscais: [],
+      p_vendedor: null,
+      p_empresa: null,
+      p_tipo_comissao: 'isento',
+      p_comissao_percentual: null,
+      p_comissao_fixa: null,
+      p_itens: [{ produto_id: produtoId, quantidade: 3, preco_unitario: 8 }],
+    })
+    expect(await estoqueAtual(produtoId)).toBe(7)
+
+    const { error } = await supabase.rpc('atualizar_venda_com_itens', {
+      p_venda_id: vendaId,
+      p_cliente_id: clienteId,
+      p_data: '2026-09-21',
+      p_notas_fiscais: [],
+      p_vendedor: null,
+      p_empresa: null,
+      p_tipo_comissao: 'isento',
+      p_comissao_percentual: null,
+      p_comissao_fixa: null,
+      p_itens: [{ produto_id: produtoId, quantidade: 999, preco_unitario: 8 }],
+    })
+
+    expect(error).not.toBeNull()
+    expect(await estoqueAtual(produtoId)).toBe(7)
+  })
+
+  it('criar venda com produto inexistente levanta erro claro', async () => {
+    const supabase = createAdminClient()
+    const { data: cargaId } = await supabase.rpc('criar_carga_com_itens', {
+      p_fornecedor_id: fornecedorId,
+      p_nome: 'Carga Teste',
+      p_data: '2026-09-20',
+      p_itens: [],
+    })
+
+    const { error } = await supabase.rpc('criar_venda_com_itens', {
+      p_carga_id: cargaId,
+      p_cliente_id: clienteId,
+      p_data: '2026-09-21',
+      p_notas_fiscais: [],
+      p_vendedor: null,
+      p_empresa: null,
+      p_tipo_comissao: 'isento',
+      p_comissao_percentual: null,
+      p_comissao_fixa: null,
+      p_itens: [{ produto_id: '00000000-0000-0000-0000-000000000000', quantidade: 1, preco_unitario: 10 }],
+    })
+
+    expect(error).not.toBeNull()
+    expect(error!.message).toContain('Produto não encontrado')
+  })
+
   it('excluir venda devolve o estoque', async () => {
     const produtoId = await criarProdutoTeste()
     const supabase = createAdminClient()

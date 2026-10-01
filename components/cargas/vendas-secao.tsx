@@ -8,6 +8,19 @@ import { formatarData, formatarMoeda } from '@/lib/formatacao'
 import { VendaModal, type ProdutoDisponivelVenda } from './venda-modal'
 import type { VendaComItens } from '@/lib/types/database'
 
+function formatarComissao(venda: VendaComItens): string {
+  switch (venda.tipo_comissao) {
+    case 'isento':
+      return 'Isento'
+    case 'percentual':
+      return `${venda.comissao_percentual}%`
+    case 'fixo':
+      return formatarMoeda(venda.comissao_fixa ?? 0)
+    case 'misto':
+      return `${venda.comissao_percentual}% + ${formatarMoeda(venda.comissao_fixa ?? 0)}`
+  }
+}
+
 export function VendasSecao({
   cargaId,
   vendas,
@@ -77,6 +90,7 @@ export function VendasSecao({
               <th className="py-2">Cliente</th>
               <th className="py-2">NFs</th>
               <th className="py-2">Valor</th>
+              <th className="py-2">Comissão</th>
               <th className="py-2"></th>
             </tr>
           </thead>
@@ -87,6 +101,7 @@ export function VendasSecao({
                 <td className="py-2">{venda.cliente_nome}</td>
                 <td className="py-2 text-slate-500">{venda.notas_fiscais.join(', ') || '—'}</td>
                 <td className="py-2">{formatarMoeda(totalVenda(venda))}</td>
+                <td className="py-2">{formatarComissao(venda)}</td>
                 <td className="py-2 text-right space-x-2">
                   <Button type="button" variant="outline" size="sm" onClick={() => abrirEdicao(venda)}>
                     Editar

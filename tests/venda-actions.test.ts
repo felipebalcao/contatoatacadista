@@ -133,6 +133,65 @@ describe('venda-actions', () => {
     expect(resultado.erro).toContain('Estoque insuficiente')
   })
 
+  it('updateVenda com id inexistente retorna erro amigável', async () => {
+    const resultado = await updateVenda('00000000-0000-0000-0000-000000000000', cargaId, {
+      ...VENDA_BASE,
+      cliente_id: clienteId,
+      itens: [{ produto_id: produtoId, quantidade: 1, preco_unitario: 10 }],
+    })
+    expect(resultado.sucesso).toBe(false)
+    if (resultado.sucesso) throw new Error('esperava falha')
+    expect(resultado.erro).toBe('Venda não encontrada.')
+  })
+
+  it('createVenda rejeita data inválida', async () => {
+    const resultado = await createVenda(cargaId, {
+      ...VENDA_BASE,
+      cliente_id: clienteId,
+      data: '',
+      itens: [{ produto_id: produtoId, quantidade: 1, preco_unitario: 10 }],
+    })
+    expect(resultado.sucesso).toBe(false)
+  })
+
+  it('createVenda rejeita venda sem itens', async () => {
+    const resultado = await createVenda(cargaId, { ...VENDA_BASE, cliente_id: clienteId, itens: [] })
+    expect(resultado.sucesso).toBe(false)
+  })
+
+  it('cria venda com múltiplos itens e comissão mista, e os dados voltam corretos', async () => {
+    const supabase = createAdminClient()
+    const { data: produto2 } = await supabase
+      .from('produtos')
+      .insert({ codigo: `TESTE-VENDA-ACTION-2-${Date.now()}`, nome: 'Produto 2 Teste', unidade: 'un' })
+      .select()
+      .single()
+    // produto2 nasce com estoque zero (não entrou em nenhuma carga); precisa de estoque
+    // suficiente para a venda abaixo poder debitar 1 unidade.
+    await supabase.from('produtos').update({ estoque_atual: 5 }).eq('id', produto2!.id)
+
+    const resultado = await createVenda(cargaId, {
+      ...VENDA_BASE,
+      cliente_id: clienteId,
+      tipo_comissao: 'misto',
+      comissao_percentual: 8,
+      comissao_fixa: 20,
+      itens: [
+        { produto_id: produtoId, quantidade: 2, preco_unitario: 10 },
+        { produto_id: produto2!.id, quantidade: 1, preco_unitario: 50 },
+      ],
+    })
+
+    expect(resultado.sucesso).toBe(true)
+    if (!resultado.sucesso) throw new Error('esperava sucesso')
+    expect(resultado.dados.tipo_comissao).toBe('misto')
+    expect(resultado.dados.comissao_percentual).toBe(8)
+    expect(resultado.dados.comissao_fixa).toBe(20)
+    expect(resultado.dados.itens).toHaveLength(2)
+
+    await supabase.from('produtos').delete().eq('id', produto2!.id)
+  })
+
   it('exclui venda inexistente retorna erro "não encontrada"', async () => {
     const resultado = await deleteVenda('00000000-0000-0000-0000-000000000000')
 

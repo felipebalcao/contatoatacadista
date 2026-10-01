@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { importarXmlNfe, type ItemXmlNfe } from '@/actions/xml-nfe-actions'
+import { linhaImportadaValida } from '@/lib/cargas/validar-linha-importada'
 import type { ItemCargaLocal, ProdutoDisponivel } from './adicionar-produto-modal'
 
 interface LinhaRevisao {
@@ -16,15 +17,6 @@ interface LinhaRevisao {
   descricao_xml: string
   status: 'casado' | 'manual' | 'erro'
   mensagem_erro: string | null
-}
-
-function linhaValida(linha: LinhaRevisao): boolean {
-  if (!linha.produto_id) return false
-  const quantidadeNum = Number(linha.quantidade)
-  const valorNum = Number(linha.valor_unitario)
-  if (!(quantidadeNum > 0)) return false
-  if (!Number.isFinite(valorNum) || valorNum < 0) return false
-  return true
 }
 
 export function ImportarXmlModal({
@@ -60,23 +52,27 @@ export function ImportarXmlModal({
     leitor.onload = () => {
       const conteudo = String(leitor.result ?? '')
       startTransition(async () => {
-        const resultado = await importarXmlNfe(conteudo)
-        if (!resultado.sucesso) {
-          setError(resultado.erro)
-          return
+        try {
+          const resultado = await importarXmlNfe(conteudo)
+          if (!resultado.sucesso) {
+            setError(resultado.erro)
+            return
+          }
+          setLinhas(
+            resultado.dados.map((item: ItemXmlNfe) => ({
+              chave: crypto.randomUUID(),
+              produto_id: item.produto_id,
+              quantidade: item.quantidade != null ? String(item.quantidade) : '',
+              valor_unitario: item.valor_unitario != null ? String(item.valor_unitario) : '',
+              descricao_xml: item.descricao_xml,
+              status: item.status,
+              mensagem_erro: item.mensagem_erro,
+            }))
+          )
+          setPasso('revisao')
+        } catch {
+          setError('Não foi possível importar o arquivo. Tente novamente com um arquivo menor ou verifique sua conexão.')
         }
-        setLinhas(
-          resultado.dados.map((item: ItemXmlNfe) => ({
-            chave: crypto.randomUUID(),
-            produto_id: item.produto_id,
-            quantidade: item.quantidade != null ? String(item.quantidade) : '',
-            valor_unitario: item.valor_unitario != null ? String(item.valor_unitario) : '',
-            descricao_xml: item.descricao_xml,
-            status: item.status,
-            mensagem_erro: item.mensagem_erro,
-          }))
-        )
-        setPasso('revisao')
       })
     }
     leitor.onerror = () => setError('Não foi possível ler o arquivo.')
@@ -115,7 +111,7 @@ export function ImportarXmlModal({
     handleFechar(false)
   }
 
-  const podeConfirmar = linhas.length > 0 && linhas.every(linhaValida)
+  const podeConfirmar = linhas.length > 0 && linhas.every((linha) => linhaImportadaValida(linha, produtosDisponiveis))
 
   return (
     <Dialog open={open} onOpenChange={handleFechar}>
@@ -135,6 +131,7 @@ export function ImportarXmlModal({
                 onChange={(e) => {
                   const arquivo = e.target.files?.[0]
                   if (arquivo) handleArquivoSelecionado(arquivo)
+                  e.target.value = ''
                 }}
               />
               {isPending && <p className="text-sm text-slate-500">Lendo arquivo...</p>}
@@ -158,8 +155,8 @@ export function ImportarXmlModal({
                   {linhas.map((linha) => (
                     <tr key={linha.chave} className="border-b align-top">
                       <td className="py-2">
-                        {linha.status === 'casado' && <span className="text-emerald-700">Casado</span>}
-                        {linha.status === 'manual' && <span className="text-amber-700">Selecione</span>}
+                        {linha.status === 'casado' && <span className="text-emerald-700">Casado automaticamente</span>}
+                        {linha.status === 'manual' && <span className="text-amber-700">Selecione o produto</span>}
                         {linha.status === 'erro' && <span className="text-red-700">Erro</span>}
                       </td>
                       <td className="py-2 text-slate-500">

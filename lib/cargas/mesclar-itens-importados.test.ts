@@ -44,4 +44,12 @@ describe('mesclarItensImportados', () => {
     mesclarItensImportados(atuais, [item('p1', 3, 8)])
     expect(atuais[0].quantidade).toBe(10)
   })
+
+  it('soma corretamente quando o produto já está na lista atual E aparece duas vezes na importação', () => {
+    const atuais = [item('p1', 10, 5)]
+    const resultado = mesclarItensImportados(atuais, [item('p1', 2, 10), item('p1', 3, 12)])
+    expect(resultado).toHaveLength(1)
+    expect(resultado[0].quantidade).toBe(15)
+    expect(resultado[0].valor_unitario).toBe(12)
+  })
 })

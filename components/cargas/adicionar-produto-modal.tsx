@@ -26,13 +26,16 @@ export function AdicionarProdutoModal({
   open,
   onOpenChange,
   produtosDisponiveis,
-  onAdicionar,
+  itemParaEditar,
+  onConfirmar,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   produtosDisponiveis: ProdutoDisponivel[]
-  onAdicionar: (item: ItemCargaLocal) => void
+  itemParaEditar?: ItemCargaLocal | null
+  onConfirmar: (item: ItemCargaLocal) => void
 }) {
+  const emEdicao = Boolean(itemParaEditar)
   const [produtoId, setProdutoId] = useState('')
   const [quantidade, setQuantidade] = useState('')
   const [valorUnitario, setValorUnitario] = useState('')
@@ -44,10 +47,16 @@ export function AdicionarProdutoModal({
       setQuantidade('')
       setValorUnitario('')
       setError(null)
+      return
     }
-  }, [open])
+    if (itemParaEditar) {
+      setProdutoId(itemParaEditar.produto_id)
+      setQuantidade(String(itemParaEditar.quantidade))
+      setValorUnitario(String(itemParaEditar.valor_unitario))
+    }
+  }, [open, itemParaEditar])
 
-  function handleAdicionar() {
+  function handleConfirmar() {
     setError(null)
     const produto = produtosDisponiveis.find((p) => p.id === produtoId)
     const quantidadeNum = Number(quantidade)
@@ -66,7 +75,7 @@ export function AdicionarProdutoModal({
       return
     }
 
-    onAdicionar({
+    onConfirmar({
       produto_id: produto.id,
       produto_codigo: produto.codigo,
       produto_nome: produto.nome,
@@ -75,16 +84,13 @@ export function AdicionarProdutoModal({
       valor_unitario: valorNum,
     })
 
-    setProdutoId('')
-    setQuantidade('')
-    setValorUnitario('')
     onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogTitle>Adicionar produto</DialogTitle>
+        <DialogTitle>{emEdicao ? 'Editar produto' : 'Adicionar produto'}</DialogTitle>
         <div className="space-y-4 mt-4">
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex flex-col gap-1.5">
@@ -131,8 +137,8 @@ export function AdicionarProdutoModal({
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="button" onClick={handleAdicionar}>
-              Adicionar
+            <Button type="button" onClick={handleConfirmar}>
+              {emEdicao ? 'Salvar' : 'Adicionar'}
             </Button>
           </div>
         </div>

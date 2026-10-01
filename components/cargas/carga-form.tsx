@@ -44,17 +44,33 @@ export function CargaForm({
     })) ?? []
   )
   const [modalAberto, setModalAberto] = useState(false)
+  const [itemEditando, setItemEditando] = useState<ItemCargaLocal | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const produtosParaModal = produtosDisponiveis.filter(
-    (p) => !itens.some((item) => item.produto_id === p.id)
+    (p) => !itens.some((item) => item.produto_id === p.id) || p.id === itemEditando?.produto_id
   )
 
   const total = itens.reduce((soma, item) => soma + item.quantidade * item.valor_unitario, 0)
 
-  function handleAdicionarItem(item: ItemCargaLocal) {
-    setItens((atual) => [...atual, item])
+  function handleAbrirAdicionar() {
+    setItemEditando(null)
+    setModalAberto(true)
+  }
+
+  function handleAbrirEdicao(item: ItemCargaLocal) {
+    setItemEditando(item)
+    setModalAberto(true)
+  }
+
+  function handleConfirmarItem(item: ItemCargaLocal) {
+    if (itemEditando) {
+      const produtoOriginal = itemEditando.produto_id
+      setItens((atual) => atual.map((i) => (i.produto_id === produtoOriginal ? item : i)))
+    } else {
+      setItens((atual) => [...atual, item])
+    }
   }
 
   function handleRemoverItem(produtoId: string) {
@@ -130,7 +146,7 @@ export function CargaForm({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label>Produtos</Label>
-          <Button type="button" variant="outline" size="sm" onClick={() => setModalAberto(true)}>
+          <Button type="button" variant="outline" size="sm" onClick={handleAbrirAdicionar}>
             Adicionar produto
           </Button>
         </div>
@@ -161,7 +177,15 @@ export function CargaForm({
                   </td>
                   <td className="py-2">{formatarMoeda(item.valor_unitario)}</td>
                   <td className="py-2">{formatarMoeda(item.quantidade * item.valor_unitario)}</td>
-                  <td className="py-2 text-right">
+                  <td className="py-2 text-right space-x-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleAbrirEdicao(item)}
+                    >
+                      Editar
+                    </Button>
                     <Button
                       type="button"
                       variant="ghost"
@@ -193,7 +217,8 @@ export function CargaForm({
         open={modalAberto}
         onOpenChange={setModalAberto}
         produtosDisponiveis={produtosParaModal}
-        onAdicionar={handleAdicionarItem}
+        itemParaEditar={itemEditando}
+        onConfirmar={handleConfirmarItem}
       />
     </form>
   )

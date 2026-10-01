@@ -133,6 +133,14 @@ describe('venda-actions', () => {
     expect(resultado.erro).toContain('Estoque insuficiente')
   })
 
+  it('exclui venda inexistente retorna erro "não encontrada"', async () => {
+    const resultado = await deleteVenda('00000000-0000-0000-0000-000000000000')
+
+    expect(resultado.sucesso).toBe(false)
+    if (resultado.sucesso) throw new Error('esperava falha')
+    expect(resultado.erro).toBe('Venda não encontrada.')
+  })
+
   it('rejeita chamadas de um usuário sem permissão de cargas', async () => {
     vi.mocked(getCurrentProfile).mockResolvedValue({ ...ADMIN_PROFILE, permissions: ['dashboard'] } as never)
 

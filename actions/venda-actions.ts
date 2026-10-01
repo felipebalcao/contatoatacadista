@@ -84,6 +84,7 @@ export async function createVenda(cargaId: string, input: VendaInput): Promise<R
 
   if (error) {
     if (error.code === '23505') return { sucesso: false, erro: 'Não é possível adicionar o mesmo produto duas vezes na venda.' }
+    if (error.code === '23503') return { sucesso: false, erro: 'Cliente ou carga não encontrados.' }
     return { sucesso: false, erro: error.message }
   }
 
@@ -120,6 +121,7 @@ export async function updateVenda(
 
   if (error) {
     if (error.code === '23505') return { sucesso: false, erro: 'Não é possível adicionar o mesmo produto duas vezes na venda.' }
+    if (error.code === '23503') return { sucesso: false, erro: 'Cliente não encontrado.' }
     return { sucesso: false, erro: error.message }
   }
 
@@ -137,6 +139,10 @@ export async function updateVenda(
 export async function deleteVenda(id: string): Promise<ResultadoAcao<void>> {
   await assertModuleAccess('cargas')
   const supabase = createAdminClient()
+
+  const { error: buscaError } = await supabase.from('vendas_carga').select('id').eq('id', id).single()
+  if (buscaError) return { sucesso: false, erro: 'Venda não encontrada.' }
+
   const { error } = await supabase.rpc('deletar_venda_com_itens', { p_venda_id: id })
   if (error) return { sucesso: false, erro: error.message }
   return { sucesso: true, dados: undefined }

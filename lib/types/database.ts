@@ -126,6 +126,7 @@ export interface Produto {
   aliquota_cofins: string | null
   ativo: boolean
   created_at: string
+  estoque_atual: number
 }
 
 export interface ProdutoInput {
@@ -215,4 +216,46 @@ export interface PagamentoInput {
   valor: number
   data: string
   observacao: string | null
+}
+
+export type TipoComissao = 'percentual' | 'isento' | 'fixo' | 'misto'
+
+export interface Venda {
+  id: string
+  carga_id: string
+  cliente_id: string
+  cliente_nome: string
+  data: string
+  notas_fiscais: string[]
+  vendedor: string | null
+  empresa: string | null
+  tipo_comissao: TipoComissao
+  comissao_percentual: number | null
+  comissao_fixa: number | null
+}
+
+export interface ItemVenda {
+  id: string
+  produto_id: string
+  produto_codigo: string
+  produto_nome: string
+  produto_unidade: string
+  quantidade: number
+  preco_unitario: number
+}
+
+export interface VendaComItens extends Venda {
+  itens: ItemVenda[]
+}
+
+export interface VendaInput {
+  cliente_id: string
+  data: string
+  notas_fiscais: string[]
+  vendedor: string | null
+  empresa: string | null
+  tipo_comissao: TipoComissao
+  comissao_percentual: number | null
+  comissao_fixa: number | null
+  itens: { produto_id: string; quantidade: number; preco_unitario: number }[]
 }

@@ -156,6 +156,18 @@ export async function listFornecedoresAtivos(): Promise<{ id: string; nome: stri
   return data ?? []
 }
 
+export async function listClientesAtivos(): Promise<{ id: string; nome: string }[]> {
+  await assertModuleAccess('cargas')
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('clientes')
+    .select('id, nome')
+    .eq('ativo', true)
+    .order('nome')
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
 export async function listProdutosAtivos(): Promise<{ id: string; codigo: string; nome: string; unidade: string }[]> {
   await assertModuleAccess('cargas')
   const supabase = createAdminClient()

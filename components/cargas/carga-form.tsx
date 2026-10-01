@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createCarga, updateCarga } from '@/actions/carga-actions'
 import { AdicionarProdutoModal, type ItemCargaLocal, type ProdutoDisponivel } from './adicionar-produto-modal'
+import { ImportarXmlModal } from './importar-xml-modal'
+import { mesclarItensImportados } from '@/lib/cargas/mesclar-itens-importados'
 import type { CargaComItens, CargaInput } from '@/lib/types/database'
 
 function formatarMoeda(valor: number): string {
@@ -44,6 +46,7 @@ export function CargaForm({
     })) ?? []
   )
   const [modalAberto, setModalAberto] = useState(false)
+  const [importarAberto, setImportarAberto] = useState(false)
   const [itemEditando, setItemEditando] = useState<ItemCargaLocal | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -75,6 +78,10 @@ export function CargaForm({
 
   function handleRemoverItem(produtoId: string) {
     setItens((atual) => atual.filter((item) => item.produto_id !== produtoId))
+  }
+
+  function handleImportarXml(itensImportados: ItemCargaLocal[]) {
+    setItens((atual) => mesclarItensImportados(atual, itensImportados))
   }
 
   function handleSubmit(formData: FormData) {
@@ -146,9 +153,14 @@ export function CargaForm({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label>Produtos</Label>
-          <Button type="button" variant="outline" size="sm" onClick={handleAbrirAdicionar}>
-            Adicionar produto
-          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setImportarAberto(true)}>
+              Importar XML da NF-e
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleAbrirAdicionar}>
+              Adicionar produto
+            </Button>
+          </div>
         </div>
 
         {itens.length === 0 ? (
@@ -219,6 +231,12 @@ export function CargaForm({
         produtosDisponiveis={produtosParaModal}
         itemParaEditar={itemEditando}
         onConfirmar={handleConfirmarItem}
+      />
+      <ImportarXmlModal
+        open={importarAberto}
+        onOpenChange={setImportarAberto}
+        produtosDisponiveis={produtosDisponiveis}
+        onImportar={handleImportarXml}
       />
     </form>
   )

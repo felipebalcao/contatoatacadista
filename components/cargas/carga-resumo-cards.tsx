@@ -3,6 +3,7 @@ import type { ResumoCarga } from '@/lib/cargas/resumo'
 
 export function CargaResumoCards({ resumo }: { resumo: ResumoCarga }) {
   const pagoAMais = resumo.falta < 0
+  const prejuizo = resumo.lucro < 0
 
   const cartoes = [
     { rotulo: 'Custo total', valor: formatarMoeda(resumo.custoTotal), alerta: false },
@@ -12,6 +13,12 @@ export function CargaResumoCards({ resumo }: { resumo: ResumoCarga }) {
       rotulo: pagoAMais ? 'Pago a mais' : 'Falta pagar',
       valor: formatarMoeda(Math.abs(resumo.falta)),
       alerta: pagoAMais,
+    },
+    { rotulo: 'Vendido', valor: formatarMoeda(resumo.vendido), alerta: false },
+    {
+      rotulo: prejuizo ? 'Prejuízo' : 'Lucro',
+      valor: formatarMoeda(Math.abs(resumo.lucro)),
+      alerta: prejuizo,
     },
   ]
 

@@ -1,9 +1,10 @@
 import Link from 'next/link'
 
-export type AbaCarga = 'itens' | 'custos' | 'pagamentos'
+export type AbaCarga = 'itens' | 'vendas' | 'custos' | 'pagamentos'
 
 export const ABAS_CARGA: { chave: AbaCarga; rotulo: string }[] = [
   { chave: 'itens', rotulo: 'Itens' },
+  { chave: 'vendas', rotulo: 'Vendas' },
   { chave: 'custos', rotulo: 'Custos' },
   { chave: 'pagamentos', rotulo: 'Pagamentos' },
 ]

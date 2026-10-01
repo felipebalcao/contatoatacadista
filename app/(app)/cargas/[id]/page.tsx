@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireModuleAccess } from '@/lib/auth/require-module-access'
-import { getCarga } from '@/actions/carga-actions'
+import { getCarga, listClientesAtivos, listProdutosAtivos } from '@/actions/carga-actions'
 import { listCustos, listPagamentos } from '@/actions/carga-lancamentos-actions'
+import { listVendas } from '@/actions/venda-actions'
 import { calcularResumoCarga } from '@/lib/cargas/resumo'
 import { formatarData } from '@/lib/formatacao'
 import { buttonVariants } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import { CargaItensTabela } from '@/components/cargas/carga-itens-tabela'
 import { dataHojeSaoPaulo } from '@/lib/cargas/data-hoje'
 import { CustosSecao } from '@/components/cargas/custos-secao'
 import { PagamentosSecao } from '@/components/cargas/pagamentos-secao'
+import { VendasSecao } from '@/components/cargas/vendas-secao'
 
 export default async function CargaDetalhePage({
   params,
@@ -30,8 +32,14 @@ export default async function CargaDetalhePage({
     notFound()
   }
 
-  const [custos, pagamentos] = await Promise.all([listCustos(id), listPagamentos(id)])
-  const resumo = calcularResumoCarga(carga.itens, custos, pagamentos)
+  const [custos, pagamentos, vendas, clientes, produtosAtivos] = await Promise.all([
+    listCustos(id),
+    listPagamentos(id),
+    listVendas(id),
+    listClientesAtivos(),
+    listProdutosAtivos(),
+  ])
+  const resumo = calcularResumoCarga(carga.itens, custos, pagamentos, vendas)
 
   return (
     <div className="space-y-6">
@@ -57,6 +65,15 @@ export default async function CargaDetalhePage({
       <div className="space-y-4">
         <CargaAbas cargaId={carga.id} ativa={abaAtiva} />
         {abaAtiva === 'itens' && <CargaItensTabela itens={carga.itens} />}
+        {abaAtiva === 'vendas' && (
+          <VendasSecao
+            cargaId={carga.id}
+            vendas={vendas}
+            clientes={clientes}
+            produtosDisponiveis={produtosAtivos}
+            dataPadrao={dataHojeSaoPaulo()}
+          />
+        )}
         {abaAtiva === 'custos' && (
           <CustosSecao cargaId={carga.id} custos={custos} dataPadrao={dataHojeSaoPaulo()} />
         )}

@@ -2,8 +2,6 @@ import Link from 'next/link'
 import { Button, buttonVariants } from '@/components/ui/button'
 import type { Cliente, TipoCliente } from '@/lib/types/database'
 
-const TIPO_LABELS: Record<TipoCliente, string> = { pf: 'CPF', pj: 'CNPJ' }
-
 function formatarDocumento(tipo: TipoCliente, documento: string): string {
   if (tipo === 'pf') {
     return documento.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
@@ -40,9 +38,7 @@ export function ClientesTable({
         {clientes.map((cliente) => (
           <tr key={cliente.id} className="border-b">
             <td className="py-2">{cliente.nome}</td>
-            <td className="py-2">
-              {TIPO_LABELS[cliente.tipo]}: {formatarDocumento(cliente.tipo, cliente.documento)}
-            </td>
+            <td className="py-2">{formatarDocumento(cliente.tipo, cliente.documento)}</td>
             <td className="py-2">
               <span
                 className={

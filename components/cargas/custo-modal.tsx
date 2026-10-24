@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -32,7 +32,10 @@ export function CustoModal({
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  useEffect(() => {
+  const chaveAtual = open ? `aberto-${custo?.id ?? 'novo'}` : 'fechado'
+  const [chaveAnterior, setChaveAnterior] = useState(chaveAtual)
+  if (chaveAtual !== chaveAnterior) {
+    setChaveAnterior(chaveAtual)
     if (open) {
       setCategoria(custo?.categoria ?? '')
       setDescricao(custo?.descricao ?? '')
@@ -40,7 +43,7 @@ export function CustoModal({
       setData(custo?.data ?? dataPadrao)
       setError(null)
     }
-  }, [open, custo, dataPadrao])
+  }
 
   function handleSalvar() {
     setError(null)

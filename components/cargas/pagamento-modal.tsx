@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -29,14 +29,17 @@ export function PagamentoModal({
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  useEffect(() => {
+  const chaveAtual = open ? `aberto-${pagamento?.id ?? 'novo'}` : 'fechado'
+  const [chaveAnterior, setChaveAnterior] = useState(chaveAtual)
+  if (chaveAtual !== chaveAnterior) {
+    setChaveAnterior(chaveAtual)
     if (open) {
       setValor(pagamento ? String(pagamento.valor) : '')
       setData(pagamento?.data ?? dataPadrao)
       setObservacao(pagamento?.observacao ?? '')
       setError(null)
     }
-  }, [open, pagamento, dataPadrao])
+  }
 
   function handleSalvar() {
     setError(null)

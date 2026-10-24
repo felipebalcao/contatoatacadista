@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -71,32 +71,36 @@ export function VendaModal({
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  useEffect(() => {
-    if (!open) return
-    setClienteId(venda?.cliente_id ?? '')
-    setData(venda?.data ?? dataPadrao)
-    setNotasFiscais(venda?.notas_fiscais ?? [])
-    setNovaNota('')
-    setVendedor(venda?.vendedor ?? '')
-    setEmpresa(venda?.empresa ?? '')
-    setTipoComissao(venda?.tipo_comissao ?? 'isento')
-    setComissaoPercentual(venda?.comissao_percentual != null ? String(venda.comissao_percentual) : '')
-    setComissaoFixa(venda?.comissao_fixa != null ? String(venda.comissao_fixa) : '')
-    setItens(
-      venda?.itens.map((item) => ({
-        produto_id: item.produto_id,
-        produto_codigo: item.produto_codigo,
-        produto_nome: item.produto_nome,
-        produto_unidade: item.produto_unidade,
-        quantidade: item.quantidade,
-        preco_unitario: item.preco_unitario,
-      })) ?? []
-    )
-    setProdutoIdNovo('')
-    setQuantidadeNova('')
-    setPrecoNovo('')
-    setError(null)
-  }, [open, venda, dataPadrao])
+  const chaveAtual = open ? `aberto-${venda?.id ?? 'novo'}` : 'fechado'
+  const [chaveAnterior, setChaveAnterior] = useState(chaveAtual)
+  if (chaveAtual !== chaveAnterior) {
+    setChaveAnterior(chaveAtual)
+    if (open) {
+      setClienteId(venda?.cliente_id ?? '')
+      setData(venda?.data ?? dataPadrao)
+      setNotasFiscais(venda?.notas_fiscais ?? [])
+      setNovaNota('')
+      setVendedor(venda?.vendedor ?? '')
+      setEmpresa(venda?.empresa ?? '')
+      setTipoComissao(venda?.tipo_comissao ?? 'isento')
+      setComissaoPercentual(venda?.comissao_percentual != null ? String(venda.comissao_percentual) : '')
+      setComissaoFixa(venda?.comissao_fixa != null ? String(venda.comissao_fixa) : '')
+      setItens(
+        venda?.itens.map((item) => ({
+          produto_id: item.produto_id,
+          produto_codigo: item.produto_codigo,
+          produto_nome: item.produto_nome,
+          produto_unidade: item.produto_unidade,
+          quantidade: item.quantidade,
+          preco_unitario: item.preco_unitario,
+        })) ?? []
+      )
+      setProdutoIdNovo('')
+      setQuantidadeNova('')
+      setPrecoNovo('')
+      setError(null)
+    }
+  }
 
   const produtosParaSelecionar = produtosDisponiveis.filter(
     (p) => !itens.some((item) => item.produto_id === p.id)

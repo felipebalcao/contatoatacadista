@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,20 +41,21 @@ export function AdicionarProdutoModal({
   const [valorUnitario, setValorUnitario] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const chaveAtual = open ? `aberto-${itemParaEditar?.produto_id ?? 'novo'}` : 'fechado'
+  const [chaveAnterior, setChaveAnterior] = useState(chaveAtual)
+  if (chaveAtual !== chaveAnterior) {
+    setChaveAnterior(chaveAtual)
     if (!open) {
       setProdutoId('')
       setQuantidade('')
       setValorUnitario('')
       setError(null)
-      return
-    }
-    if (itemParaEditar) {
+    } else if (itemParaEditar) {
       setProdutoId(itemParaEditar.produto_id)
       setQuantidade(String(itemParaEditar.quantidade))
       setValorUnitario(String(itemParaEditar.valor_unitario))
     }
-  }, [open, itemParaEditar])
+  }
 
   function handleConfirmar() {
     setError(null)
